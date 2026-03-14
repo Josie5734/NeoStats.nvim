@@ -8,9 +8,8 @@ made window and text formatting
 next need to start working on getting/tracking some stats
 and a timer to update the text with those stats
 
-work on xp bar
 
-idea:
+idea for later:
 have just the xp bar in the little corner window by default
 then have a big window that can be opened from cmdline
 big window shows all of the stats
@@ -21,18 +20,15 @@ local M = {}
 
 local window = { buf = nil, win = nil, width = 24, height = 20 } --table for the floating window data
 local xpbar = { --xpbar stuff
-	cur = 0, --current xp
+	cur = 87, --current xp
 	tar = 100, --target for next level
 	inc = 1.3, --how much to multiply by for the next target
-	bar = "[--------------------]", --the bar
 }
 local stats = { --tracked stats
-	xp = xpbar.cur, --xp
 	total_chars = 5000000,
 	other_stat = 20,
 }
 local order = { --the order that the stats are shown in the window
-	"xp",
 	"total_chars",
 	"other_stat",
 }
@@ -44,8 +40,15 @@ function M.center(text, width)
 end
 
 --format the given label and stat value into a line for the window
-function M.fstat(label, value)
-	return string.format("%-15s %d", label .. ":", value)
+function M.fstat(label, value) --value is formatted into a string, so can be int or string on input
+	return string.format("%-15s %s", label .. ":", value)
+end
+
+--build the bar for the xp bar
+function M.xpbar_calc()
+	local percent = (xpbar.cur / xpbar.tar) * 100 --percentage of progress through level
+	local progress = math.floor(percent / 5) --divide by 5 and cut off decimal to get number of #s to fill in bar
+	return "[" .. string.rep("#", progress) .. string.rep("-", 20 - progress) .. "]" --put the bar together and return
 end
 
 --text for the window. in a function so it can be updated easily
@@ -53,8 +56,8 @@ function M.get_text()
 	local lines = { --table of each line of text for the window
 		M.center("Neostats", window.width), --title
 		"", --empty line
-		M.center(M.fstat("xp", xpbar.cur), window.width), --TODO: figure out how to get "cur/tar" into fstat, or just manually do it since its just this one thing
-		M.center(xpbar.bar, window.width),
+		M.center(M.fstat("xp", xpbar.cur .. "/" .. xpbar.tar), window.width),
+		M.center(M.xpbar_calc(), window.width),
 		"",
 	}
 	for _, key in ipairs(order) do --for each stat in stats (using the order table to be in order)
