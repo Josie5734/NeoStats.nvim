@@ -7,16 +7,32 @@ made window and text formatting
 
 next need to start working on getting/tracking some stats
 and a timer to update the text with those stats
+
+work on xp bar
+
+idea:
+have just the xp bar in the little corner window by default
+then have a big window that can be opened from cmdline
+big window shows all of the stats
+and also has tickboxes for each stat to put it in the little menu
 --]]
 
 local M = {}
 
-local window = { buf = nil, win = nil, width = 30, height = 20 } --table for the floating window data
+local window = { buf = nil, win = nil, width = 24, height = 20 } --table for the floating window data
+local xpbar = { --xpbar stuff
+	cur = 0, --current xp
+	tar = 100, --target for next level
+	inc = 1.3, --how much to multiply by for the next target
+	bar = "[--------------------]", --the bar
+}
 local stats = { --tracked stats
+	xp = xpbar.cur, --xp
 	total_chars = 5000000,
 	other_stat = 20,
 }
 local order = { --the order that the stats are shown in the window
+	"xp",
 	"total_chars",
 	"other_stat",
 }
@@ -29,7 +45,7 @@ end
 
 --format the given label and stat value into a line for the window
 function M.fstat(label, value)
-	return string.format("%-20s %d", label .. ":", value)
+	return string.format("%-15s %d", label .. ":", value)
 end
 
 --text for the window. in a function so it can be updated easily
@@ -37,6 +53,9 @@ function M.get_text()
 	local lines = { --table of each line of text for the window
 		M.center("Neostats", window.width), --title
 		"", --empty line
+		M.center(M.fstat("xp", xpbar.cur), window.width), --TODO: figure out how to get "cur/tar" into fstat, or just manually do it since its just this one thing
+		M.center(xpbar.bar, window.width),
+		"",
 	}
 	for _, key in ipairs(order) do --for each stat in stats (using the order table to be in order)
 		local name = key:gsub("_", " ") --replace the underscore with a space in the name
