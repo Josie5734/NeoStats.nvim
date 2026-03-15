@@ -45,14 +45,13 @@ for working out individual chars,
 
 ]]
 
+local save = require("neostats.save") --get save functions
+
 local NS = {}
 
-local dir = vim.fn.stdpath("data") .. "/neostats" --folder for neostats data in nvims data folder
-local file = dir .. "/neostats.json" --json file to save data into
+NS.window = { buf = nil, win = nil, width = 24, height = 6 } --table for the floating window data
 
-local window = { buf = nil, win = nil, width = 24, height = 6 } --table for the floating window data
-
-local default_stats = { --default stats used when no project stats are found
+NS.default_stats = { --default stats used when no project stats are found
 	xp = { --xp stuff
 		total = 0, --total xp
 		target = 100, --target xp for next level
@@ -66,51 +65,12 @@ local default_stats = { --default stats used when no project stats are found
 	},
 }
 
-local data = { --track stats per project
+NS.data = { --track stats per project
 	--[cwd] = {
 	--xp = {}
 	--stats = {}
 	--}
 }
-
---return the stats for the current project (cwd) or set them to default if its a new project
-function NS.get_project_stats()
-	local project = vim.fn.getcwd() --get cwd to use as project key
-
-	if not data[project] then --if no stats for the cwd
-		data[project] = default_stats --set to default
-	end
-
-	return data[project] --return current project stats
-end
-
---save to a JSON file in nvim data dir
-function NS.save_data()
-	vim.fn.mkdir(dir, "p") --make the save directory if it doesnt exist
-
-	local savefile = io.open(file, "w") --open savefile in write mode
-	if not savefile then
-		return --exit if file couldnt be opened
-	end
-
-	savefile:write(vim.fn.json_encode(data)) --write the data table into the file
-	savefile:close() --close file
-end
-
---load data from the JSON file
-function NS.load_data()
-	local savefile = io.open(file, "r") --open savefile in read mode
-	if not savefile then
-		return --quit if file couldnt be opened
-	end
-
-	local content = savefile:read("a") --read all the files contents
-	savefile:close() --close file
-
-	if content and content ~= "" then --if the content exists and isnt empty
-		data = vim.fn.json_decode(content) --put content into data table
-	end
-end
 
 --take in given text and width, return string with the text in the center of the width
 function NS.center(text, width)
@@ -125,7 +85,7 @@ end
 
 --calculate xp level ups and stuff
 function NS.xp_calc()
-	local project = NS.get_project_stats() --get current project data
+	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 	if project.xp.total >= project.xp.target then --if at target for current level
 		local temp = project.xp.target --store reached target temporarily
 		project.xp.target = math.floor(project.xp.target * project.xp.inc) --go to next target threshold
@@ -136,7 +96,7 @@ function NS.xp_calc()
 end
 --build the bar for the xp bar
 function NS.get_xpbar()
-	local project = NS.get_project_stats() --get current project data
+	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 	local percent = (project.xp.level_xp / project.xp.level_size) * 100 --percentage of progress through level
 	local progress = math.floor(percent / 5) --divide by 5 and cut off decimal to get number of #s to fill in bar
 	return "[" .. string.rep("#", progress) .. string.rep("-", 20 - progress) .. "]" --put the bar together and return
@@ -144,13 +104,13 @@ end
 
 --generate the text for the window
 function NS.get_text()
-	local project = NS.get_project_stats() --get current project data
+	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 	local lines = { --table of each line of text for the window
-		NS.center("Neostats", window.width), --title
+		NS.center("Neostats", NS.window.width), --title
 		"", --empty line
-		NS.center(NS.fstat("xp", project.xp.total .. "/" .. project.xp.target), window.width), --xp
-		NS.center(NS.get_xpbar(), window.width), --xpbar
-		NS.center(NS.fstat("level", project.xp.level), window.width), --level
+		NS.center(NS.fstat("xp", project.xp.total .. "/" .. project.xp.target), NS.window.width), --xp
+		NS.center(NS.get_xpbar(), NS.window.width), --xpbar
+		NS.center(NS.fstat("level", project.xp.level), NS.window.width), --level
 	}
 	--[[ unused for now, saving incase needed later
 	if #order > 0 then --if there is anything in the order table to put into the window
@@ -165,8 +125,8 @@ end
 
 --update stats and other numbery stuff
 function NS.update()
-	NS.xp_calc() --update xp bar ad stats and stuff
-	vim.api.nvim_buf_set_lines(window.buf, 0, -1, false, NS.get_text()) --set updated window text
+	NS.xp_calc() --update stats and stuff
+	vim.api.nvim_buf_set_lines(NS.window.buf, 0, -1, false, NS.get_text()) --set updated window text
 end
 
 --timer for updating
@@ -194,40 +154,48 @@ function NS.create_window()
 	local win = vim.api.nvim_open_win(buf, false, {
 		relative = "editor",
 		anchor = "NW", --NW so that top left of window is placed at row,col
-		width = window.width,
-		height = window.height,
-		row = (vim.o.lines - 4) - window.height, --put window on bottom row + X for command line and lualine (and border if applicable)
-		col = vim.o.columns - window.width, --all the way to the right column, accounting for window width
+		width = NS.window.width,
+		height = NS.window.height,
+		row = (vim.o.lines - 4) - NS.window.height, --put window on bottom row + X for command line and lualine (and border if applicable)
+		col = vim.o.columns - NS.window.width, --all the way to the right column, accounting for window width
 		style = "minimal",
 		border = "single",
 	})
 
-	window.buf = buf --put objects into table
-	window.win = win
+	NS.window.buf = buf --put objects into table
+	NS.window.win = win
 end
 
 --close window
 function NS.close_window()
-	if window.win and vim.api.nvim_win_is_valid(window.win) then --if window exists
-		vim.api.nvim_win_close(window.win, true) --close window
-		window.win = nil --reset win var
+	if NS.window.win and vim.api.nvim_win_is_valid(NS.window.win) then --if window exists
+		vim.api.nvim_win_close(NS.window.win, true) --close window
+		NS.window.win = nil --reset win var
 	end
-	if window.buf and vim.api.nvim_buf_is_valid(window.buf) then --if buffer exists
-		vim.api.nvim_buf_delete(window.buf, { force = true }) --delete buffer
-		window.buf = nil --reset buf var
+	if NS.window.buf and vim.api.nvim_buf_is_valid(NS.window.buf) then --if buffer exists
+		vim.api.nvim_buf_delete(NS.window.buf, { force = true }) --delete buffer
+		NS.window.buf = nil --reset buf var
 	end
+end
+
+--exiting cleanly
+function NS.exit()
+	NS.close_window() --close window
+	if NS._timer then --if timer exists
+		NS._timer:stop() --stop update timer
+	end
+	NS.xp_calc() --do any last xp calculations
+	save.save_data(NS.data) --save the current data
 end
 
 --setup stuff
 function NS.setup()
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
-		if window.win or window.buf then --if window exists
-			NS.close_window() --close window
-			NS._timer:stop() --stop update timer
-			NS.save_data() --save the current data
+		if NS.window.win or NS.window.buf then --if window exists
+			NS.exit() --clean exit
 		else --else open window
-			NS.load_data() --load the save data
+			NS.data = save.load_data() --load the save data
 			NS.create_window()
 			NS.start_timer() --start update timer
 		end
@@ -241,15 +209,24 @@ function NS.setup()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			local project = NS.get_project_stats() --get current project data
+			print(NS.data, NS.default_stats)
+			local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 			project.stats.total_chars = project.stats.total_chars + 1 --iterate total char count
 			project.xp.total = project.xp.total + 1 --add xp to total
 			project.xp.level_xp = project.xp.level_xp + 1 --add xp to current level
 		end,
 	})
 
+	--on leaving nvim, save data
+	vim.api.nvim_create_autocmd("VimLeavePre", {
+		group = augroup,
+		callback = function()
+			NS.exit() --clean exit
+		end,
+	})
+
 	--if there are no stats for the cwd, sets the defaults for it
-	NS.get_project_stats()
+	save.get_project_stats(NS.data, NS.default_stats)
 end
 
 --temporary test function for when needed
@@ -267,4 +244,13 @@ ksdjfhdskjfnsdkjfnsdkjfnsdkjfhsdkjfhskdjnfkjsdnfjksdnfjknsdkfjndsjkfnsdkjnfksjdn
 sdkjfnsdkfjnsdfkjsdnfsdkjfnbsdfjdsnf
 sdkfjnsdfkjsdnfkjndfgkjnsdfkjgnkjnsdfgkjnojndfgkjkjndfgkjnkljndfgkjnkjndfgkjnljndfgkjnkljdfgkljnkjnfgkjnlkjldfglknjkdfnglkmn
 osidjflksdnfsdlkn
+
+sikdujhfgsdkjfhsdfkjdh
+ksadjnfsdkjfndkjfsn
+lsdkjf
+skdjfhnksdjnfkjsdnfkjsadnfkjdsnfkjsdnfkjsdkfjnkjnsdakjnfsn
+ksjldnfkjsdnfsdkjndjfnsdlfknsdflkndsfknsdflknsdlfknsdlknknlkdnfsdlkfndsflk
+kjsbnfdkjnfkjndfkgjndfkgjndfgkjndfgkjndfgkjndfgkjndfkgjndfkgjndfkgjndfgkjndfgkjdfngdfkjgndfgkjndf
+jkndfgjnfdg kujhsdfkjhsdfkjdsfkjhsdfkjhsdfkjsdh
+iksjhfksjdanfsdkjn
 ]]
