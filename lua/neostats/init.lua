@@ -38,22 +38,6 @@ and also has tickboxes for each stat to put it in the little menu
 
 
 
---timer for updating (taken from wpm, needs reimplementing here)
-function M.start_timer()
-	if M._timer then
-		M._timer:stop()
-	end
-
-	M._timer = vim.loop.new_timer()
-
-	M._timer:start(
-		0, --start on startup
-		1000, --repeat 1000ms (1second)
-		vim.schedule_wrap(function()
-			M:update_window() --update the window display
-		end)
-	)
-end
 
 --update the text in the window (taken from wpm, needs reimplementing here)
 function M.update_window()
@@ -146,6 +130,29 @@ function M.get_text()
 	return lines
 end
 
+--update stats and other numbery stuff
+function M.update()
+	M.xp_calc() --update xp bar ad stats and stuff
+	vim.api.nvim_buf_set_lines(window.buf, 0, -1, false, M.get_text()) --set updated window text
+end
+
+--timer for updating
+function M.start_timer()
+	if M._timer then --if timer exists already then stop it
+		M._timer:stop()
+	end
+
+	M._timer = vim.loop.new_timer() --create new timer
+
+	M._timer:start(
+		0, --start on startup
+		1000, --repeat 1000ms (1second)
+		vim.schedule_wrap(function()
+			M.update() --update everything that needs updating
+		end)
+	)
+end
+
 --creating window
 function M.create_window()
 	local buf = vim.api.nvim_create_buf(false, true) --buffer
@@ -184,8 +191,10 @@ function M.setup()
 	vim.keymap.set("n", "<leader>ns", function()
 		if window.win or window.buf then --if window exists
 			M.close_window() --close window
+			M._timer:stop() --stop update timer
 		else --else open window
 			M.create_window()
+			M.start_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
 
@@ -202,16 +211,6 @@ function M.setup()
 			xp.level_xp = xp.level_xp + 1 --add xp to current level
 		end,
 	})
-
-	--leaving insert mode (temporarily used for signal to update)
-	vim.api.nvim_create_autocmd("InsertLeave", {
-		group = augroup,
-		pattern = "*",
-		callback = function()
-			M.xp_calc() --calculate xp stuff
-			vim.api.nvim_buf_set_lines(window.buf, 0, -1, false, M.get_text()) --set window text
-		end,
-	})
 end
 
 --temporary test function for when needed
@@ -222,16 +221,5 @@ end
 return M
 
 --[[ text testing area
-skjhfkjshdfkjshfksjhfkjsdhfskdjfhskdjfhsdfjhsdf
-sdjfhsdkfhjsdfkjsdhfksjdfhsdkjh
-asdakfjhsdkfjsdhfksadjhfsdakjh
-ksdjfhsadfkjh
-ksjbfgbsadkjfsdafkjdfsdkjfnsdkjn
-askdjfnsdkfjnsdfkjsdnfsdakjfn
-kjsandkjsdnfskdjfnskdjfnsdkjfsdnfksdjfnsadfkjn
-skdjfnasdkfjnsdfkjasdn
-kjsdnfkasdjnfsadkfjnasdf
-jksdnfkasjdfbvtirbsskfbao
-aksdjbfaskejbfdsfkjb
-sdkfsdkjfnsdfkjn
+
 ]]
