@@ -201,6 +201,26 @@ function NS.setup()
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
 
+	--commands for NeoStats
+	vim.api.nvim_create_user_command("NeoStats", function(opts)
+		local commands = { --table of commands
+			reset = function() --reset
+				save.reset_data(NS.data) --call reset function
+				print("NeoStats for current project have been reset") --output
+			end,
+			--command2 = function() end
+		}
+		local cmd = opts.fargs[1] --get given command from args
+		if commands[cmd] then --if command exists
+			commands[cmd]() --execute function
+		end
+	end, {
+		nargs = 1, --number of arguments possible to give
+		complete = function() --completion for the arguments
+			return { "reset" }
+		end,
+	})
+
 	--define group for autocommands
 	local augroup = vim.api.nvim_create_augroup("NeoStatsAuto", { clear = true })
 
@@ -244,7 +264,7 @@ ksdjfhdskjfnsdkjfnsdkjfnsdkjfhsdkjfhskdjnfkjsdnfjksdnfjknsdkfjndsjkfnsdkjnfksjdn
 sdkjfnsdkfjnsdfkjsdnfsdkjfnbsdfjdsnf
 sdkfjnsdfkjsdnfkjndfgkjnsdfkjgnkjnsdfgkjnojndfgkjkjndfgkjnkljndfgkjnkjndfgkjnljndfgkjnkljdfgkljnkjnfgkjnlkjldfglknjkdfnglkmn
 osidjflksdnfsdlkn
-
+lksndgflkdfnglkdfngklnlkndsflksdn
 sikdujhfgsdkjfhsdfkjdh
 ksadjnfsdkjfndkjfsn
 lsdkjf
@@ -253,4 +273,8 @@ ksjldnfkjsdnfsdkjndjfnsdlfknsdflkndsfknsdflknsdlfknsdlknknlkdnfsdlkfndsflk
 kjsbnfdkjnfkjndfkgjndfkgjndfgkjndfgkjndfgkjndfgkjndfkgjndfkgjndfkgjndfgkjndfgkjdfngdfkjgndfgkjndf
 jkndfgjnfdg kujhsdfkjhsdfkjdsfkjhsdfkjhsdfkjsdh
 iksjhfksjdanfsdkjn
+lksajdflskdjfsdlkfjsdlkfjsdflkj
+sjkldhf
+lksdnfkjn
+oksndfklsdnfsdkjln
 ]]

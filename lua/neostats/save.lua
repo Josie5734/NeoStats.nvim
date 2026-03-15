@@ -11,7 +11,7 @@ function M.get_project_stats(data, default)
 	local project = vim.fn.getcwd() --get cwd to use as project key
 
 	if not data[project] then --if no stats for the cwd
-		data[project] = vim.deepcopy(default) --set to default (make copy rather than point)
+		data[project] = vim.deepcopy(default) --set to default (make copy of default rather than pointing to it)
 	end
 
 	return data[project] --return current project stats
@@ -43,6 +43,13 @@ function M.load_data()
 	if content and content ~= "" then --if the content exists and isnt empty
 		return vim.fn.json_decode(content) --put content into data table and return
 	end
+end
+
+--reset the data for the current project in the data table
+function M.reset_data(data)
+	local project = vim.fn.getcwd() --get cwd to use as project key
+	data[project] = nil --reset the data at that project
+	return data --return table with project removed
 end
 
 return M
