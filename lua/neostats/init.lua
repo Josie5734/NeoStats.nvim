@@ -3,19 +3,9 @@
 --[[
 plan:
 
-next need to start working on getting/tracking some stats
-
 TODO:
-figure out saving and loading tracked data
-per project tracking 
-
-TODO:
-command to reset current project data
-NeoStats reset
-  should just delete data[project]
-
-TODO:
-separate out functions into separate files
+just realised that stats are only tracked when the window is open,
+should probably make it so that stat tracking goes on in the background 
 
 TODO:
 make window values more variable
@@ -46,10 +36,9 @@ for working out individual chars,
 ]]
 
 local save = require("neostats.save") --get save functions
+local window = require("neostats.window") --get window functions
 
 local NS = {}
-
-NS.window = { buf = nil, win = nil, width = 24, height = 6 } --table for the floating window data
 
 NS.default_stats = { --default stats used when no project stats are found
 	xp = { --xp stuff
@@ -106,11 +95,11 @@ end
 function NS.get_text()
 	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 	local lines = { --table of each line of text for the window
-		NS.center("Neostats", NS.window.width), --title
+		NS.center("Neostats", window.window.width), --title
 		"", --empty line
-		NS.center(NS.fstat("xp", project.xp.total .. "/" .. project.xp.target), NS.window.width), --xp
-		NS.center(NS.get_xpbar(), NS.window.width), --xpbar
-		NS.center(NS.fstat("level", project.xp.level), NS.window.width), --level
+		NS.center(NS.fstat("xp", project.xp.total .. "/" .. project.xp.target), window.window.width), --xp
+		NS.center(NS.get_xpbar(), window.window.width), --xpbar
+		NS.center(NS.fstat("level", project.xp.level), window.window.width), --level
 	}
 	--[[ unused for now, saving incase needed later
 	if #order > 0 then --if there is anything in the order table to put into the window
@@ -126,7 +115,7 @@ end
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
-	vim.api.nvim_buf_set_lines(NS.window.buf, 0, -1, false, NS.get_text()) --set updated window text
+	vim.api.nvim_buf_set_lines(window.window.buf, 0, -1, false, NS.get_text()) --set updated window text
 end
 
 --timer for updating
@@ -146,41 +135,9 @@ function NS.start_timer()
 	)
 end
 
---creating window
-function NS.create_window()
-	local buf = vim.api.nvim_create_buf(false, true) --buffer
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, NS.get_text()) --set initial window text
-
-	local win = vim.api.nvim_open_win(buf, false, {
-		relative = "editor",
-		anchor = "NW", --NW so that top left of window is placed at row,col
-		width = NS.window.width,
-		height = NS.window.height,
-		row = (vim.o.lines - 4) - NS.window.height, --put window on bottom row + X for command line and lualine (and border if applicable)
-		col = vim.o.columns - NS.window.width, --all the way to the right column, accounting for window width
-		style = "minimal",
-		border = "single",
-	})
-
-	NS.window.buf = buf --put objects into table
-	NS.window.win = win
-end
-
---close window
-function NS.close_window()
-	if NS.window.win and vim.api.nvim_win_is_valid(NS.window.win) then --if window exists
-		vim.api.nvim_win_close(NS.window.win, true) --close window
-		NS.window.win = nil --reset win var
-	end
-	if NS.window.buf and vim.api.nvim_buf_is_valid(NS.window.buf) then --if buffer exists
-		vim.api.nvim_buf_delete(NS.window.buf, { force = true }) --delete buffer
-		NS.window.buf = nil --reset buf var
-	end
-end
-
 --exiting cleanly
 function NS.exit()
-	NS.close_window() --close window
+	window.close_window() --close window
 	if NS._timer then --if timer exists
 		NS._timer:stop() --stop update timer
 	end
@@ -192,11 +149,11 @@ end
 function NS.setup()
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
-		if NS.window.win or NS.window.buf then --if window exists
+		if window.window.win or window.window.buf then --if window exists
 			NS.exit() --clean exit
 		else --else open window
 			NS.data = save.load_data() --load the save data
-			NS.create_window()
+			window.create_window(NS.get_text) --pass in get text function (not the output)
 			NS.start_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
