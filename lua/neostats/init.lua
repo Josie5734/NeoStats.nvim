@@ -2,11 +2,6 @@
 
 --[[
 plan:
-
-TODO:
-just realised that stats are only tracked when the window is open,
-should probably make it so that stat tracking goes on in the background 
-
 TODO:
 make window values more variable
 
@@ -147,13 +142,14 @@ end
 
 --setup stuff
 function NS.setup()
+	NS.data = save.load_data() --load the save data
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
 		if window.window.win or window.window.buf then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			NS.data = save.load_data() --load the save data
 			window.create_window(NS.get_text) --pass in get text function (not the output)
+			NS.update()
 			NS.start_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
@@ -186,7 +182,6 @@ function NS.setup()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			print(NS.data, NS.default_stats)
 			local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
 			project.stats.total_chars = project.stats.total_chars + 1 --iterate total char count
 			project.xp.total = project.xp.total + 1 --add xp to total
@@ -208,30 +203,21 @@ end
 
 --temporary test function for when needed
 function NS.test()
-	print("neostats is connected")
+	local project = save.get_project_stats(NS.data, NS.default_stats)
+	print(project.xp.total)
 end
 
 return NS
 
 --[[ text testing area
-
-sdkhfkjsldjhfglsdkjfsdlkfjlklkjsd
-dfsghfadgihjksdvbadfgjhdasngvjksdfbdsjfvdfsjkgdfgjbdgjkdfgdskjfgndfkgjndfgkjdfngdfskjgnksdfjngkdsjfgn
-ksdjfhdskjfnsdkjfnsdkjfnsdkjfhsdkjfhskdjnfkjsdnfjksdnfjknsdkfjndsjkfnsdkjnfksjdnfkjsdnfkjsdnfkjsdnfkjsdnsdkjfnksdjfnsdjkfnsdkjfnsd#
-sdkjfnsdkfjnsdfkjsdnfsdkjfnbsdfjdsnf
-sdkfjnsdfkjsdnfkjndfgkjnsdfkjgnkjnsdfgkjnojndfgkjkjndfgkjnkljndfgkjnkjndfgkjnljndfgkjnkljdfgkljnkjnfgkjnlkjldfglknjkdfnglkmn
-osidjflksdnfsdlkn
-lksndgflkdfnglkdfngklnlkndsflksdn
-sikdujhfgsdkjfhsdfkjdh
-ksadjnfsdkjfndkjfsn
-lsdkjf
-skdjfhnksdjnfkjsdnfkjsadnfkjdsnfkjsdnfkjsdkfjnkjnsdakjnfsn
-ksjldnfkjsdnfsdkjndjfnsdlfknsdflkndsfknsdflknsdlfknsdlknknlkdnfsdlkfndsflk
-kjsbnfdkjnfkjndfkgjndfkgjndfgkjndfgkjndfgkjndfgkjndfkgjndfkgjndfkgjndfgkjndfgkjdfngdfkjgndfgkjndf
-jkndfgjnfdg kujhsdfkjhsdfkjdsfkjhsdfkjhsdfkjsdh
-iksjhfksjdanfsdkjn
-lksajdflskdjfsdlkfjsdlkfjsdflkj
-sjkldhf
-lksdnfkjn
-oksndfklsdnfsdkjln
+kjsdbnfkjsdnfdskjnasihiujiuhsfsdjkfnsdfsdjnfkj
+sdklfsdkln
+sdknfsdfkjn
+jksdnfsdkjfnsdkfjnsdfkjsdnfsdkjfnsdkjfns
+odfngdkjfngdfskjgjasndfgjnsdfkjsadnn
+kkjlsdnfgsdnf
+jjkdbfkjsafskdjfnnsdkjfn
+jkdngfdkfjgndfkjn
+kjdnsfkjnsdfkjn
+sdkfnsdkjfnsdfkjn
 ]]
