@@ -57,61 +57,23 @@ NS.data = { --track stats per project
 	--}
 }
 
---take in given text and width, return string with the text in the center of the width
-function NS.center(text, width)
-	local padding = math.floor((width - #text) / 2)
-	return string.rep(" ", padding) .. text
-end
-
---format the given label and stat value into a line for the window
-function NS.fstat(label, value) --value is formatted into a string, so can be int or string on input
-	return string.format("%-15s %s", label .. ":", value)
-end
+NS.project = {} --stats for current project
 
 --calculate xp level ups and stuff
 function NS.xp_calc()
-	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
-	if project.xp.total >= project.xp.target then --if at target for current level
-		local temp = project.xp.target --store reached target temporarily
-		project.xp.target = math.floor(project.xp.target * project.xp.inc) --go to next target threshold
-		project.xp.level_size = project.xp.target - temp --update size of level
-		project.xp.level_xp = 0 + (project.xp.total - temp) --reset levelxp, accounting for the total going over the target before this update
-		project.xp.level = project.xp.level + 1 --iterate level
+	if NS.project.xp.total >= NS.project.xp.target then --if at target for current level
+		local temp = NS.project.xp.target --store reached target temporarily
+		NS.project.xp.target = math.floor(NS.project.xp.target * NS.project.xp.inc) --go to next target threshold
+		NS.project.xp.level_size = NS.project.xp.target - temp --update size of level
+		NS.project.xp.level_xp = 0 + (NS.project.xp.total - temp) --reset levelxp, accounting for the total going over the target before this update
+		NS.project.xp.level = NS.project.xp.level + 1 --iterate level
 	end
-end
---build the bar for the xp bar
-function NS.get_xpbar()
-	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
-	local percent = (project.xp.level_xp / project.xp.level_size) * 100 --percentage of progress through level
-	local progress = math.floor(percent / 5) --divide by 5 and cut off decimal to get number of #s to fill in bar
-	return "[" .. string.rep("#", progress) .. string.rep("-", 20 - progress) .. "]" --put the bar together and return
-end
-
---generate the text for the window
-function NS.get_text()
-	local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
-	local lines = { --table of each line of text for the window
-		NS.center("Neostats", window.window.width), --title
-		"", --empty line
-		NS.center(NS.fstat("xp", project.xp.total .. "/" .. project.xp.target), window.window.width), --xp
-		NS.center(NS.get_xpbar(), window.window.width), --xpbar
-		NS.center(NS.fstat("level", project.xp.level), window.window.width), --level
-	}
-	--[[ unused for now, saving incase needed later
-	if #order > 0 then --if there is anything in the order table to put into the window
-		for _, key in ipairs(order) do --for each stat in stats (using the order table to be in order)
-			local name = key:gsub("_", " ") --replace the underscore with a space in the name
-			table.insert(lines, NS.fstat(name, stats[key])) --insert formatted stat into the lines table
-		end
-	end
-  ]]
-	return lines
 end
 
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
-	vim.api.nvim_buf_set_lines(window.window.buf, 0, -1, false, NS.get_text()) --set updated window text
+	window.mini_window_update(NS.project.xp)
 end
 
 --timer for updating
@@ -133,7 +95,7 @@ end
 
 --exiting cleanly
 function NS.exit()
-	window.close_window() --close window
+	window.mini_window_close() --close window
 	if NS._timer then --if timer exists
 		NS._timer:stop() --stop update timer
 	end
@@ -144,12 +106,17 @@ end
 --setup stuff
 function NS.setup()
 	NS.data = save.load_data() --load the save data
+	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get the specific local project data
+	--sets defaults if not
+	--TODO:
+	--autocmd to reget project stats each time buf/file changes
+
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
 		if window.window.win or window.window.buf then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			window.create_window(NS.get_text()) --pass in generated lines
+			window.mini_window_open(NS.project.xp) --pass in xp values for displaying
 			NS.update()
 			NS.start_timer() --start update timer
 		end
@@ -189,10 +156,9 @@ function NS.setup()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			local project = save.get_project_stats(NS.data, NS.default_stats) --get current project data
-			project.stats.total_chars = project.stats.total_chars + 1 --iterate total char count
-			project.xp.total = project.xp.total + 1 --add xp to total
-			project.xp.level_xp = project.xp.level_xp + 1 --add xp to current level
+			NS.project.stats.total_chars = NS.project.stats.total_chars + 1 --iterate total char count
+			NS.project.xp.total = NS.project.xp.total + 1 --add xp to total
+			NS.project.xp.level_xp = NS.project.xp.level_xp + 1 --add xp to current level
 		end,
 	})
 
@@ -203,9 +169,6 @@ function NS.setup()
 			NS.exit() --clean exit
 		end,
 	})
-
-	--if there are no stats for the current project, sets the defaults for it
-	save.get_project_stats(NS.data, NS.default_stats)
 end
 
 --temporary test function for when needed
@@ -225,6 +188,7 @@ kkjlsdnfgsdnf
 jjkdbfkjsafskdjfnnsdkjfn
 jkdngfdkfjgndfkjn
 kjdnsfkjnsdfkjn
+sdkfnbsdkjfnsdkjfnsdfkjn
 sdkfnsdkjfnsdfkjn
 dsfslkdjfsdlkfjsdlfkjsdflsdkjflkj
 sdkjfnsdkjfnsdfkjnsdkfjn
