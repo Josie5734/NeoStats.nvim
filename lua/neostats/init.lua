@@ -50,7 +50,7 @@ NS.default_stats = { --default stats used when no project stats are found
 }
 
 NS.data = { --track stats per project
-	--[cwd] = {
+	--[projectroot] = {
 	--xp = {}
 	--stats = {}
 	--}
@@ -197,7 +197,7 @@ function NS.setup()
 		end,
 	})
 
-	--if there are no stats for the cwd, sets the defaults for it
+	--if there are no stats for the current project, sets the defaults for it
 	save.get_project_stats(NS.data, NS.default_stats)
 end
 
@@ -220,4 +220,5 @@ jjkdbfkjsafskdjfnnsdkjfn
 jkdngfdkfjgndfkjn
 kjdnsfkjnsdfkjn
 sdkfnsdkjfnsdfkjn
+dsfslkdjfsdlkfjsdlfkjsdflsdkjflkj
 ]]
