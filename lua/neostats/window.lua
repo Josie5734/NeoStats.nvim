@@ -4,10 +4,10 @@ local M = {} --module
 
 M.window = { buf = nil, win = nil, width = 24, height = 6 } --table for the floating window data
 
---creating window (needs get_text function passed in to generate lines)
-function M.create_window(get_text)
+--creating window with given text (table of lines)
+function M.create_window(text)
 	local buf = vim.api.nvim_create_buf(false, true) --buffer
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, get_text()) --set initial window text
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, text) --set initial window text
 
 	local win = vim.api.nvim_open_win(buf, false, {
 		relative = "editor",
@@ -18,6 +18,7 @@ function M.create_window(get_text)
 		col = vim.o.columns - M.window.width, --all the way to the right column, accounting for window width
 		style = "minimal",
 		border = "single",
+		focusable = false, --cant click into the window
 	})
 
 	M.window.buf = buf --put objects into table

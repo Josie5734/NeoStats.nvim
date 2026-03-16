@@ -3,14 +3,15 @@
 --[[
 plan:
 TODO:
-make window values more variable
-
-TODO:
 opts implementation in setup to configure stuff
+not actually sure what yet
 
 TODO:
 make the larger window where all stats will be tracked 
   NeoStats command to open it 
+call big window the MainWindow and rename little one to MiniWindow
+would first have to refactor current window stuff to be MiniWindow specific
+then make stuff for MainWindow
 
 
 TODO:
@@ -148,7 +149,7 @@ function NS.setup()
 		if window.window.win or window.window.buf then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			window.create_window(NS.get_text) --pass in get text function (not the output)
+			window.create_window(NS.get_text()) --pass in generated lines
 			NS.update()
 			NS.start_timer() --start update timer
 		end
@@ -157,21 +158,27 @@ function NS.setup()
 	--commands for NeoStats
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
+			default = function() --the default noargs function
+				NS.test() --for now just test output, will be the big window in future
+			end,
 			reset = function() --reset
 				save.reset_data(NS.data) --call reset function
 				print("NeoStats for current project have been reset") --output
 			end,
 			--command2 = function() end
 		}
-		local cmd = opts.fargs[1] --get given command from args
-		if commands[cmd] then --if command exists
+		local cmd = opts.fargs[1] --get given args (if any)
+		if not cmd then --if no arg given
+			commands["default"]() --call default command
+		elseif commands[cmd] then --else if arg given and if command exists
 			commands[cmd]() --execute function
 		end
 	end, {
-		nargs = 1, --number of arguments possible to give
+		nargs = "?", --allow zero or one arguments to be given
 		complete = function() --completion for the arguments
 			return { "reset" }
 		end,
+		desc = "NeoStats commands",
 	})
 
 	--define group for autocommands
@@ -203,8 +210,7 @@ end
 
 --temporary test function for when needed
 function NS.test()
-	local project = save.get_project_stats(NS.data, NS.default_stats)
-	print(project.xp.total)
+	print("working")
 end
 
 return NS
@@ -221,4 +227,5 @@ jkdngfdkfjgndfkjn
 kjdnsfkjnsdfkjn
 sdkfnsdkjfnsdfkjn
 dsfslkdjfsdlkfjsdlfkjsdflsdkjflkj
+sdkjfnsdkjfnsdfkjnsdkfjn
 ]]
