@@ -86,7 +86,9 @@ end
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
-	window.mini_window_update(NS.project.xp)
+	if window.mini_window_exists() then --if window exists
+		window.mini_window_update(NS.project.xp) --update
+	end
 end
 
 --timer for updating
@@ -95,7 +97,9 @@ function NS.start_update_timer()
 		NS._update_timer:stop()
 	end
 
-	NS._update_timer = vim.loop.new_timer() --create new timer
+	--was getting "undefined-field" on new_timer() even though it worked fine
+	---@diagnostic disable-next-line: undefined-field
+	NS._update_timer = vim.uv.new_timer() --create new timer
 
 	NS._update_timer:start(
 		0, --start on startup
@@ -145,8 +149,6 @@ function NS.setup()
 	NS.data = save.load_data() --load the saved data
 	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get the specific local project data
 	--sets defaults if not
-	--TODO:
-	--autocmd to reget project stats each time buf/file changes
 
 	--get startuptime
 	startup_time = os.time()
