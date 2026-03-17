@@ -13,11 +13,13 @@ call big window the MainWindow and rename little one to MiniWindow
 would first have to refactor current window stuff to be MiniWindow specific
 then make stuff for MainWindow
 
-
 TODO:
-revisit fstat and center functions
-ideally want to have everything lined up to be 1 column in from each side 
-and span the whole distance between
+plans for stats to track:
+.
+-total characters typed in insert mode
+-how many of each individual character
+-characters + lines deleted 
+-time spent in the project
 
 
 for working out individual chars,
@@ -46,9 +48,12 @@ NS.default_stats = { --default stats used when no project stats are found
 		inc = 2.05, --how much to multiply by for the next target
 	},
 	stats = { --tracked stats
-		total_chars = 0,
+		total_chars = 0, --chars typed
+		total_time = 0, --time in project
 	},
 }
+
+NS.current_project = nil --path of currently open project
 
 NS.data = { --track stats per project
 	--[projectroot] = {
@@ -58,6 +63,8 @@ NS.data = { --track stats per project
 }
 
 NS.project = {} --stats for current project
+
+local startup_time = 0 --time that project was opened
 
 --calculate xp level ups and stuff
 function NS.xp_calc()
@@ -70,6 +77,12 @@ function NS.xp_calc()
 	end
 end
 
+--calculate time spent in session
+function NS.session_time()
+	local sessiontime = os.time() - startup_time --time on call - time at startup
+	NS.project.stats.total_time = NS.project.stats.total_time + sessiontime
+end
+
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
@@ -77,14 +90,14 @@ function NS.update()
 end
 
 --timer for updating
-function NS.start_timer()
-	if NS._timer then --if timer exists already then stop it
-		NS._timer:stop()
+function NS.start_update_timer()
+	if NS._update_timer then --if timer exists already then stop it
+		NS._update_timer:stop()
 	end
 
-	NS._timer = vim.loop.new_timer() --create new timer
+	NS._update_timer = vim.loop.new_timer() --create new timer
 
-	NS._timer:start(
+	NS._update_timer:start(
 		0, --start on startup
 		1000, --repeat 1000ms (1second)
 		vim.schedule_wrap(function()
@@ -93,32 +106,59 @@ function NS.start_timer()
 	)
 end
 
+--check if the project needs to be switched
+function NS.check_project()
+	local new_path = save.get_project_root() --get new root
+	if NS.current_project ~= new_path then --if path is different
+		NS.switch() --switch projects
+	end
+end
+
+--switch project
+function NS.switch()
+	NS.session_time() --save time for current project
+	NS.xp_calc() --final xp calcs
+	save.save_data(NS.data) --save current project data
+	startup_time = os.time() --reset startup time
+	NS.current_project = save.get_project_root() --get new current_project root
+	NS.data = save.load_data() --load new data
+	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get new project stats
+	if window.mini_window_exists() then
+		window.mini_window_update(NS.project.xp) --update window if it exists
+	end
+end
+
 --exiting cleanly
 function NS.exit()
 	window.mini_window_close() --close window
-	if NS._timer then --if timer exists
-		NS._timer:stop() --stop update timer
+	if NS._update_timer then --if timer exists
+		NS._update_timer:stop() --stop update timer
 	end
+	NS.session_time() --calculate session time and add to stats
 	NS.xp_calc() --do any last xp calculations
 	save.save_data(NS.data) --save the current data
 end
 
 --setup stuff
 function NS.setup()
-	NS.data = save.load_data() --load the save data
+	NS.current_project = save.get_project_root() --get path of current project
+	NS.data = save.load_data() --load the saved data
 	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get the specific local project data
 	--sets defaults if not
 	--TODO:
 	--autocmd to reget project stats each time buf/file changes
 
+	--get startuptime
+	startup_time = os.time()
+
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
-		if window.window.win or window.window.buf then --if window exists
+		if window.mini_window_exists() then --if window exists
 			NS.exit() --clean exit
 		else --else open window
 			window.mini_window_open(NS.project.xp) --pass in xp values for displaying
 			NS.update()
-			NS.start_timer() --start update timer
+			NS.start_update_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
 
@@ -131,6 +171,9 @@ function NS.setup()
 			reset = function() --reset
 				save.reset_data(NS.data) --call reset function
 				print("NeoStats for current project have been reset") --output
+			end,
+			test = function() --call test function for any testing
+				NS.test()
 			end,
 			--command2 = function() end
 		}
@@ -148,6 +191,11 @@ function NS.setup()
 		desc = "NeoStats commands",
 	})
 
+	NS.create_autocmds() --create autocmds
+end
+
+--create all autocommands
+function NS.create_autocmds()
 	--define group for autocommands
 	local augroup = vim.api.nvim_create_augroup("NeoStatsAuto", { clear = true })
 
@@ -162,6 +210,15 @@ function NS.setup()
 		end,
 	})
 
+	--on buf enter or directory change, check if need to load project again
+	vim.api.nvim_create_autocmd({ "DirChanged", "BufEnter" }, {
+		group = augroup,
+		pattern = "*",
+		callback = function()
+			NS.check_project()
+		end,
+	})
+
 	--on leaving nvim, save data
 	vim.api.nvim_create_autocmd("VimLeavePre", {
 		group = augroup,
@@ -170,26 +227,13 @@ function NS.setup()
 		end,
 	})
 end
-
 --temporary test function for when needed
 function NS.test()
-	print("working")
+	print(NS.project.stats.total_time)
 end
 
 return NS
 
 --[[ text testing area
-kjsdbnfkjsdnfdskjnasihiujiuhsfsdjkfnsdfsdjnfkj
-sdklfsdkln
-sdknfsdfkjn
-jksdnfsdkjfnsdkfjnsdfkjsdnfsdkjfnsdkjfns
-odfngdkjfngdfskjgjasndfgjnsdfkjsadnn
-kkjlsdnfgsdnf
-jjkdbfkjsafskdjfnnsdkjfn
-jkdngfdkfjgndfkjn
-kjdnsfkjnsdfkjn
-sdkfnbsdkjfnsdkjfnsdfkjn
-sdkfnsdkjfnsdfkjn
-dsfslkdjfsdlkfjsdlfkjsdflsdkjflkj
-sdkjfnsdkjfnsdfkjnsdkfjn
+
 ]]

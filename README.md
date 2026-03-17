@@ -18,11 +18,11 @@ NeoStats tracks things like:
 
 - a cool arbitrary xp bar and level system
 
-- total number characters written
+- total number of characters written
 
 - number of each individual character written
 
-- many more things that i have not thought of yet 👍
+- many more things that i have not thought of and/or got round to making yet 👍
 
 Stats will be tracked per project and potentially globally depending on how things turn out, with as much customisability as possible
 

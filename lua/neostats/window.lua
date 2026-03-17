@@ -41,6 +41,17 @@ function M.mini_window_close()
 		M.window.buf = nil --reset buf var
 	end
 end
+
+--check if mini window exists
+function M.mini_window_exists()
+	if M.window.win and M.window.buf then --if exists
+		if vim.api.nvim_win_is_valid(M.window.win) and vim.api.nvim_buf_is_valid(M.window.buf) then
+			return true --send true if valid
+		end
+	else
+		return false --else send false
+	end
+end
 --
 --take in given text and width, return string with the text in the center of the width
 function M.center(text, width)
