@@ -4,7 +4,7 @@ local M = {} --module
 
 M.window = { --table for both windows
 	main = { buf = nil, win = nil, width = 10, height = 10, padding = 1 }, --main window
-	mini = { buf = nil, win = nil, width = 24, height = 6, padding = 1 }, --mini window
+	mini = { buf = nil, win = nil, width = 24, height = 5, padding = 1 }, --mini window
 }
 
 --creating window with generated text (table of lines)
@@ -27,6 +27,10 @@ function M.mini_window_open(xp)
 		col = vim.o.columns - M.window.mini.width, --all the way to the right column, accounting for window width
 		style = "minimal",
 		border = "single",
+		title = " NeoStats ", --title and footer, centered
+		title_pos = "center",
+		footer = " NeoStats ",
+		footer_pos = "center",
 		focusable = false, --cant click into the window
 	})
 
@@ -67,7 +71,68 @@ function M.mini_window_exists()
 		return false --else send false
 	end
 end
---
+
+--create main window
+function M.main_window_open()
+	local width = math.floor(vim.o.columns * 0.8) --centered horizontal and vertical
+	local height = math.floor(vim.o.lines * 0.8)
+
+	local buf = vim.api.nvim_create_buf(false, true) --buffer
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.main_window_gen_text(width, M.window.main.padding)) --set initial window text
+
+	local win = vim.api.nvim_open_win(buf, true, { --open win and get focus
+		relative = "editor",
+		anchor = "NW", --NW so that top left of window is placed at row,col
+		width = width,
+		height = height,
+		row = math.floor((vim.o.lines - height) / 2),
+		col = math.floor((vim.o.columns - width) / 2),
+		style = "minimal",
+		border = "rounded",
+		title = " NeoStats ", --title and footer, centered
+		title_pos = "center",
+		footer = " NeoStats ",
+		footer_pos = "center",
+	})
+
+	M.window.main.buf = buf --store references to buffer and window
+	M.window.main.win = win
+
+	--keymap for closing window with q
+	vim.keymap.set("n", "q", function()
+		M.main_window_close()
+	end, { buffer = M.window.main.buf, nowait = true })
+end
+
+--close main window
+function M.main_window_close()
+	if M.main_window_exists() then --if window exists
+		vim.api.nvim_win_close(M.window.main.win, true) --close window
+		vim.api.nvim_buf_delete(M.window.main.buf, { force = true }) --delete buffer
+		M.window.main.win = nil --delete references
+		M.window.main.buf = nil
+	end
+end
+
+--check if main window exists
+function M.main_window_exists()
+	if M.window.main.win and M.window.main.buf then --if exists
+		if vim.api.nvim_win_is_valid(M.window.main.win) and vim.api.nvim_buf_is_valid(M.window.main.buf) then
+			return true --return true if valid
+		end
+	else
+		return false
+	end
+end
+
+--generate text for main window
+function M.main_window_gen_text(width, padding)
+	local lines = {
+		M.center("NeoStats", width),
+	}
+	return lines
+end
+
 --take in given text and width, return string with the text in the center of the width
 function M.center(text, width)
 	local padding = math.floor((width - #text) / 2)
@@ -101,7 +166,6 @@ end
 --generate text for the mini window. takes an xpstats table and a window width
 function M.mini_window_gen_text(xp, width, padding)
 	local lines = {
-		M.center("NeoStats", width), --title bar
 		"", --empty line
 		M.mini_format_stat("xp", xp.total .. "/" .. xp.target, width, padding), --xp
 		M.center(M.gen_xpbar(xp), width), --xp bar
@@ -109,9 +173,5 @@ function M.mini_window_gen_text(xp, width, padding)
 	}
 	return lines
 end
-
---plan for formatting mini window text
---all text should be exactly 1 column in from each side
---so column 1 = border, column 2 = space, column 3 = text
 
 return M
