@@ -168,7 +168,7 @@ function NS.setup()
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
 			default = function() --the default noargs function
-				window.main_window_open()
+				window.main_window_open(NS.project.stats) --open the big window to display all stats
 			end,
 			reset = function() --reset
 				save.reset_data(NS.data) --call reset function
