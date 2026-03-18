@@ -7,11 +7,7 @@ opts implementation in setup to configure stuff
 not actually sure what yet
 
 TODO:
-make the larger window where all stats will be tracked 
-  NeoStats command to open it 
-call big window the MainWindow and rename little one to MiniWindow
-would first have to refactor current window stuff to be MiniWindow specific
-then make stuff for MainWindow
+main window:
 
 TODO:
 plans for stats to track:
@@ -34,7 +30,10 @@ for working out individual chars,
 ]]
 
 local save = require("neostats.save") --get save functions
-local window = require("neostats.window") --get window functions
+local window = { --get window functions as window.main.function() and window.mini.function()
+	main = require("neostats.window.main"),
+	mini = require("neostats.window.mini"),
+}
 
 local NS = {}
 
@@ -86,8 +85,8 @@ end
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
-	if window.mini_window_exists() then --if window exists
-		window.mini_window_update(NS.project.xp) --update
+	if window.mini.exists() then --if window exists
+		window.mini.update(NS.project.xp) --update
 	end
 end
 
@@ -127,14 +126,14 @@ function NS.switch()
 	NS.current_project = save.get_project_root() --get new current_project root
 	NS.data = save.load_data() --load new data
 	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get new project stats
-	if window.mini_window_exists() then
-		window.mini_window_update(NS.project.xp) --update window if it exists
+	if window.mini.exists() then
+		window.mini.update(NS.project.xp) --update window if it exists
 	end
 end
 
 --exiting cleanly
 function NS.exit()
-	window.mini_window_close() --close window
+	window.mini.close() --close window
 	if NS._update_timer then --if timer exists
 		NS._update_timer:stop() --stop update timer
 	end
@@ -155,10 +154,10 @@ function NS.setup()
 
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
-		if window.mini_window_exists() then --if window exists
+		if window.mini.exists() then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			window.mini_window_open(NS.project.xp) --pass in xp values for displaying
+			window.mini.open(NS.project.xp) --pass in xp values for displaying
 			NS.update()
 			NS.start_update_timer() --start update timer
 		end
@@ -168,7 +167,7 @@ function NS.setup()
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
 			default = function() --the default noargs function
-				window.main_window_open(NS.project.stats) --open the big window to display all stats
+				window.main.open(NS.project.stats) --open the big window to display all stats
 			end,
 			reset = function() --reset
 				save.reset_data(NS.data) --call reset function
