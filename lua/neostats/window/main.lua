@@ -1,6 +1,7 @@
 --code for the main window of NeoStats
 
 local utils = require("neostats.window.utils") --import util functions
+local data = require("neostats.data") --get data for project
 
 local M = {}
 
@@ -20,12 +21,12 @@ local order = { --the order to display the stats in the main window
 	"total_time",
 }
 --create main window (takes in stats table for displaying)
-function M.open(stats)
+function M.open()
 	local width = M.window.width() --calculate width and height
 	local height = M.window.height()
 
 	local buf = vim.api.nvim_create_buf(false, true) --buffer
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.main_window_gen_text(stats, width)) --set initial window text
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.main_window_gen_text(width)) --set initial window text
 
 	local win = vim.api.nvim_open_win(buf, true, { --open win and get focus
 		relative = "editor",
@@ -75,14 +76,14 @@ function M.exists()
 	end
 end
 
---generate text for main window
-function M.main_window_gen_text(stats, width)
+--generate text for main window. width is the width of the text
+function M.main_window_gen_text(width)
 	local lines = {
 		utils.center("Your super cool NeoVim stats", width),
 		"", --blank line
 	}
 	for _, stat in ipairs(order) do --in order given in order table
-		local value = stats[stat] --get the value
+		local value = data.project.stats[stat] --get the value
 		if stat == "total_time" then --if time
 			value = utils.time_format(value) --put into hh:mm:ss format
 		end

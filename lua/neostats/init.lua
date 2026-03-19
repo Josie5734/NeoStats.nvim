@@ -67,7 +67,7 @@ end
 function NS.update()
 	NS.xp_calc() --update stats and stuff
 	if window.mini.exists() then --if window exists
-		window.mini.update(data.project.xp) --update
+		window.mini.update() --update
 	end
 end
 
@@ -108,7 +108,7 @@ function NS.switch()
 	data.data = save.load_data() --load new data
 	data.project = save.get_project_stats(data.data, data.default_stats) --get new project stats
 	if window.mini.exists() then
-		window.mini.update(data.project.xp) --update window if it exists
+		window.mini.update() --update window if it exists
 	end
 end
 
@@ -138,7 +138,7 @@ function NS.setup()
 		if window.mini.exists() then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			window.mini.open(data.project.xp) --pass in xp values for displaying
+			window.mini.open() --pass in xp values for displaying
 			NS.update()
 			NS.start_update_timer() --start update timer
 		end
@@ -148,7 +148,7 @@ function NS.setup()
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
 			default = function() --the default noargs function
-				window.main.open(data.project.stats) --open the big window to display all stats
+				window.main.open() --open the big window to display all stats
 			end,
 			reset = function() --reset
 				save.reset_data(data.data) --call reset function
@@ -186,6 +186,8 @@ function NS.create_autocmds()
 		group = augroup,
 		pattern = "*",
 		callback = function()
+			--TODO:
+			--put this into a function like add_to_stats() or something so it can be expanded easier
 			data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
 			data.project.xp.total = data.project.xp.total + 1 --add xp to total
 			data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
