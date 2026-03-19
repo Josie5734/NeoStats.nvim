@@ -10,6 +10,9 @@ TODO:
 main window:
 
 TODO:
+look into tracking properly when two separate instances of nvim open 
+
+TODO:
 plans for stats to track:
 .
 -total characters typed in insert mode
