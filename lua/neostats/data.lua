@@ -22,6 +22,7 @@ M.default_stats = { --default stats used when no project stats are found
 	},
 	stats = { --tracked stats
 		total_chars = 0, --chars typed
+		all_chars = {}, --table for every character typed, is built dynamically upon typing a character
 		deleted_chars = 0,
 		total_time = 0, --time in project
 	},
@@ -29,6 +30,7 @@ M.default_stats = { --default stats used when no project stats are found
 
 M.order = { --the order to display the stats in the main window
 	"total_chars",
+	"all_chars",
 	"deleted_chars",
 	"total_time",
 }

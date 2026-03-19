@@ -4,11 +4,18 @@
 plan:
 
 TODO:
+added in individual char tracking
+has output function for main window
+does not have updating and also doesnt seem to save
+also also seems to make total_time not show in the main window anymore
+
+TODO:
 opts implementation in setup to configure stuff
 not actually sure what yet
 
 TODO:
 main window:
+make better design/layout eventually
 
 TODO:
 look into tracking properly when two separate instances of nvim open 
@@ -32,7 +39,7 @@ for working out individual chars,
 
 
 ]]
-
+local chars = {}
 local save = require("neostats.save") --get save functions
 local window = { --get window functions as window.main.function() and window.mini.function()
 	main = require("neostats.window.main"),
@@ -61,6 +68,14 @@ end
 function NS.session_time()
 	local sessiontime = os.time() - startup_time --time on call - time at startup
 	data.project.stats.total_time = data.project.stats.total_time + sessiontime
+end
+
+--record stats from char input in insert mode
+function NS.add_chars(char)
+	data.project.stats.all_chars[tostring(char)] = (data.project.stats.all_chars[tostring(char)] or 0) + 1 --iterate char typed. create entry if doesnt exist
+	data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
+	data.project.xp.total = data.project.xp.total + 1 --add xp to total
+	data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
 end
 
 --update stats and other numbery stuff
@@ -186,11 +201,7 @@ function NS.create_autocmds()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			--TODO:
-			--put this into a function like add_to_stats() or something so it can be expanded easier
-			data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
-			data.project.xp.total = data.project.xp.total + 1 --add xp to total
-			data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
+			NS.add_chars(vim.v.char)
 		end,
 	})
 
@@ -213,11 +224,11 @@ function NS.create_autocmds()
 end
 --temporary test function for when needed
 function NS.test()
-	print(data.project.stats.deleted_chars)
+	print(vim.inspect(data.project.stats.all_chars))
 end
 
 return NS
 
 --[[ text testing area
-
+iqwerty
 ]]
