@@ -38,59 +38,36 @@ local window = { --get window functions as window.main.function() and window.min
 	main = require("neostats.window.main"),
 	mini = require("neostats.window.mini"),
 }
+local data = require("neostats.data") --get data tables
 
 local NS = {}
 
-NS.default_stats = { --default stats used when no project stats are found
-	xp = { --xp stuff
-		total = 0, --total xp
-		target = 100, --target xp for next level
-		level_xp = 0, --xp for the current level (internal, used for xpbar)
-		level_size = 100, --how much xp is needed for current level (tar-total on levelup, used for xpbar)
-		level = 0, --current level
-		inc = 2.05, --how much to multiply by for the next target
-	},
-	stats = { --tracked stats
-		total_chars = 0, --chars typed
-		total_time = 0, --time in project
-	},
-}
-
 NS.current_project = nil --path of currently open project
-
-NS.data = { --track stats per project
-	--[projectroot] = {
-	--xp = {}
-	--stats = {}
-	--}
-}
-
-NS.project = {} --stats for current project
 
 local startup_time = 0 --time that project was opened
 
 --calculate xp level ups and stuff
 function NS.xp_calc()
-	if NS.project.xp.total >= NS.project.xp.target then --if at target for current level
-		local temp = NS.project.xp.target --store reached target temporarily
-		NS.project.xp.target = math.floor(NS.project.xp.target * NS.project.xp.inc) --go to next target threshold
-		NS.project.xp.level_size = NS.project.xp.target - temp --update size of level
-		NS.project.xp.level_xp = 0 + (NS.project.xp.total - temp) --reset levelxp, accounting for the total going over the target before this update
-		NS.project.xp.level = NS.project.xp.level + 1 --iterate level
+	if data.project.xp.total >= data.project.xp.target then --if at target for current level
+		local temp = data.project.xp.target --store reached target temporarily
+		data.project.xp.target = math.floor(data.project.xp.target * data.project.xp.inc) --go to next target threshold
+		data.project.xp.level_size = data.project.xp.target - temp --update size of level
+		data.project.xp.level_xp = 0 + (data.project.xp.total - temp) --reset levelxp, accounting for the total going over the target before this update
+		data.project.xp.level = data.project.xp.level + 1 --iterate level
 	end
 end
 
 --calculate time spent in session
 function NS.session_time()
 	local sessiontime = os.time() - startup_time --time on call - time at startup
-	NS.project.stats.total_time = NS.project.stats.total_time + sessiontime
+	data.project.stats.total_time = data.project.stats.total_time + sessiontime
 end
 
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
 	if window.mini.exists() then --if window exists
-		window.mini.update(NS.project.xp) --update
+		window.mini.update(data.project.xp) --update
 	end
 end
 
@@ -125,13 +102,13 @@ end
 function NS.switch()
 	NS.session_time() --save time for current project
 	NS.xp_calc() --final xp calcs
-	save.save_data(NS.data) --save current project data
+	save.save_data(data.data) --save current project data
 	startup_time = os.time() --reset startup time
 	NS.current_project = save.get_project_root() --get new current_project root
-	NS.data = save.load_data() --load new data
-	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get new project stats
+	data.data = save.load_data() --load new data
+	data.project = save.get_project_stats(data.data, data.default_stats) --get new project stats
 	if window.mini.exists() then
-		window.mini.update(NS.project.xp) --update window if it exists
+		window.mini.update(data.project.xp) --update window if it exists
 	end
 end
 
@@ -143,14 +120,14 @@ function NS.exit()
 	end
 	NS.session_time() --calculate session time and add to stats
 	NS.xp_calc() --do any last xp calculations
-	save.save_data(NS.data) --save the current data
+	save.save_data(data.data) --save the current data
 end
 
 --setup stuff
 function NS.setup()
 	NS.current_project = save.get_project_root() --get path of current project
-	NS.data = save.load_data() --load the saved data
-	NS.project = save.get_project_stats(NS.data, NS.default_stats) --get the specific local project data
+	data.data = save.load_data() --load the saved data
+	data.project = save.get_project_stats(data.data, data.default_stats) --get the specific local project data
 	--sets defaults if not
 
 	--get startuptime
@@ -161,7 +138,7 @@ function NS.setup()
 		if window.mini.exists() then --if window exists
 			NS.exit() --clean exit
 		else --else open window
-			window.mini.open(NS.project.xp) --pass in xp values for displaying
+			window.mini.open(data.project.xp) --pass in xp values for displaying
 			NS.update()
 			NS.start_update_timer() --start update timer
 		end
@@ -171,10 +148,10 @@ function NS.setup()
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
 			default = function() --the default noargs function
-				window.main.open(NS.project.stats) --open the big window to display all stats
+				window.main.open(data.project.stats) --open the big window to display all stats
 			end,
 			reset = function() --reset
-				save.reset_data(NS.data) --call reset function
+				save.reset_data(data.data) --call reset function
 				print("NeoStats for current project have been reset") --output
 			end,
 			test = function() --call test function for any testing
@@ -209,9 +186,9 @@ function NS.create_autocmds()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			NS.project.stats.total_chars = NS.project.stats.total_chars + 1 --iterate total char count
-			NS.project.xp.total = NS.project.xp.total + 1 --add xp to total
-			NS.project.xp.level_xp = NS.project.xp.level_xp + 1 --add xp to current level
+			data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
+			data.project.xp.total = data.project.xp.total + 1 --add xp to total
+			data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
 		end,
 	})
 
@@ -234,7 +211,7 @@ function NS.create_autocmds()
 end
 --temporary test function for when needed
 function NS.test()
-	print(NS.project.stats.total_time)
+	print(data.project.stats.total_time)
 end
 
 return NS
