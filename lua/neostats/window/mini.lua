@@ -16,7 +16,7 @@ M.window = { --window opts
 --creating window with generated text (table of lines)
 function M.open()
 	local buf = vim.api.nvim_create_buf(false, true) --buffer
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.mini_window_gen_text(M.window.width, M.window.padding)) --set initial window text
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.gen_text(M.window.width, M.window.padding)) --set initial window text
 
 	local win = vim.api.nvim_open_win(buf, false, {
 		relative = "editor",
@@ -40,7 +40,7 @@ end
 
 --update window
 function M.update()
-	vim.api.nvim_buf_set_lines(M.window.buf, 0, -1, false, M.mini_window_gen_text(M.window.width, M.window.padding)) --set updated window text
+	vim.api.nvim_buf_set_lines(M.window.buf, 0, -1, false, M.gen_text(M.window.width, M.window.padding)) --set updated window text
 end
 
 --close window
@@ -69,7 +69,7 @@ end
 --format stats for the mini window
 --stat for label, value for number.
 --width for width of window and padding for how much padding from the side
-function M.mini_format_stat(stat, value, width, padding)
+function M.format_stat(stat, value, width, padding)
 	return string.format(
 		string.rep(" ", padding) .. "%-" .. ((width - (padding * 2)) - #tostring(value)) .. "s%s",
 		stat .. ":",
@@ -84,12 +84,12 @@ function M.mini_format_stat(stat, value, width, padding)
 end
 
 --generate text for the mini window. takes an xpstats table and a window width
-function M.mini_window_gen_text(width, padding)
+function M.gen_text(width, padding)
 	local lines = {
 		"", --empty line
-		M.mini_format_stat("xp", data.project.xp.total .. "/" .. data.project.xp.target, width, padding), --xp
+		M.format_stat("xp", data.project.xp.total .. "/" .. data.project.xp.target, width, padding), --xp
 		utils.center(utils.gen_xpbar(data.project.xp), width), --xp bar
-		M.mini_format_stat("level", data.project.xp.level, width, padding), --level
+		M.format_stat("level", data.project.xp.level, width, padding), --level
 	}
 	return lines
 end

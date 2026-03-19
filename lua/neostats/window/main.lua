@@ -16,17 +16,13 @@ M.window = { --table for window opts
 	end,
 }
 
-local order = { --the order to display the stats in the main window
-	"total_chars",
-	"total_time",
-}
 --create main window (takes in stats table for displaying)
 function M.open()
 	local width = M.window.width() --calculate width and height
 	local height = M.window.height()
 
 	local buf = vim.api.nvim_create_buf(false, true) --buffer
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.main_window_gen_text(width)) --set initial window text
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.gen_text(width)) --set initial window text
 
 	local win = vim.api.nvim_open_win(buf, true, { --open win and get focus
 		relative = "editor",
@@ -77,24 +73,24 @@ function M.exists()
 end
 
 --generate text for main window. width is the width of the text
-function M.main_window_gen_text(width)
+function M.gen_text(width)
 	local lines = {
 		utils.center("Your super cool NeoVim stats", width),
 		"", --blank line
 	}
-	for _, stat in ipairs(order) do --in order given in order table
+	for _, stat in ipairs(data.order) do --in order given in order table
 		local value = data.project.stats[stat] --get the value
 		if stat == "total_time" then --if time
 			value = utils.time_format(value) --put into hh:mm:ss format
 		end
-		table.insert(lines, utils.center(M.main_format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
+		table.insert(lines, utils.center(M.format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
 	end
 	return lines
 end
 
 --formatting for the main window
 ----width = total width of the text from stat to value
-function M.main_format_stat(stat, value, width)
+function M.format_stat(stat, value, width)
 	local str = string.format("%-" .. (width - #tostring(value)) .. "s%s", stat .. ":", value) --get the formatted string
 	--works by taking a width for the whole string and putting stat and value on opposite ends of it
 	return str:gsub(" ", ".") --then return the string with the spaces replaced with dots

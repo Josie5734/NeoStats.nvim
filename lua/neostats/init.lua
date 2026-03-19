@@ -139,7 +139,7 @@ function NS.setup()
 			NS.exit() --clean exit
 		else --else open window
 			window.mini.open() --pass in xp values for displaying
-			NS.update()
+			NS.update() --update stuff
 			NS.start_update_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
@@ -213,7 +213,7 @@ function NS.create_autocmds()
 end
 --temporary test function for when needed
 function NS.test()
-	print(data.project.stats.total_time)
+	print(data.project.stats.deleted_chars)
 end
 
 return NS

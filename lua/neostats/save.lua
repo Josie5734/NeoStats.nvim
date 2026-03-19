@@ -43,8 +43,23 @@ function M.get_project_stats(data, default)
 	if not data[project] then --if no stats for the cwd
 		data[project] = vim.deepcopy(default) --set to default (make copy of default rather than pointing to it)
 	end
-
+	data[project] = M.check_project_stats(data[project], default)
 	return data[project] --return current project stats
+end
+
+--check that the project stats have all the stat fields from default_stats
+function M.check_project_stats(project, default)
+	for k, v in pairs(default.stats) do --for each stat in default
+		if not project.stats[k] then --if that stat doesnt exist in data
+			project.stats[k] = v --create it with default value
+		end
+	end
+	for k, v in pairs(default.xp) do --same thing for xp, shouldnt really be necessary but just incase
+		if not project.xp[k] then
+			project.xp[k] = v
+		end
+	end
+	return project
 end
 
 --save to a JSON file in nvim data dir
