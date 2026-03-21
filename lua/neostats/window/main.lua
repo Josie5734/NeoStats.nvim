@@ -83,7 +83,8 @@ function M.gen_text(width)
 
 		if stat == "total_time" then --if time
 			value = utils.time_format(value) --put into hh:mm:ss format
-		elseif stat == "all_chars" then --if all chars
+			table.insert(lines, utils.center(M.format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
+		elseif stat == "all_chars" and (value ~= nil and value ~= {}) then --if all chars (and data exists)
 			local char_lines = M.format_all_chars(value, width) --format all chars into table of lines
 			for i, v in ipairs(char_lines) do --for each line returned from format
 				table.insert(lines, v) --put into lines table
@@ -103,7 +104,7 @@ function M.format_all_chars(value, width)
 	local entries = {} --table to track name and value of each character recorded
 
 	for char, count in pairs(value) do --for each char in the all_chars table
-		table.insert(entries, { char = char, count = count }) --put into entries
+		table.insert(entries, { char = char or 0, count = count or 0 }) --put into entries
 	end
 	table.sort(entries, function(a, b) --sort the entries into order
 		return a.count > b.count

@@ -4,12 +4,6 @@
 plan:
 
 TODO:
-added in individual char tracking
-has output function for main window
-does not have updating and also doesnt seem to save
-also also seems to make total_time not show in the main window anymore
-
-TODO:
 opts implementation in setup to configure stuff
 not actually sure what yet
 
