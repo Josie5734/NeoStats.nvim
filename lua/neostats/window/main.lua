@@ -84,7 +84,7 @@ function M.gen_text(width)
 		if stat == "total_time" then --if time
 			value = utils.time_format(value) --put into hh:mm:ss format
 			table.insert(lines, utils.center(M.format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
-		elseif stat == "all_chars" and (value ~= nil and value ~= {}) then --if all chars (and data exists)
+		elseif stat == "all_chars" then --if all chars table
 			local char_lines = M.format_all_chars(value, width) --format all chars into table of lines
 			for i, v in ipairs(char_lines) do --for each line returned from format
 				table.insert(lines, v) --put into lines table
