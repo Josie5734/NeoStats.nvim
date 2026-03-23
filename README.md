@@ -52,8 +52,25 @@ Keymaps:
 
 Commands:
 
-- `:NeoStats` - currently does nothing on its own but will be the way to open the main window once implemented
-- ` NeoStats reset` - resets the stats for the current project
+- `:NeoStats` - opens the main stats window
+- `:NeoStats reset` - resets the stats for the current project
+
+---
+
+### Features:
+
+- cool XP and level system :0
+- little window in the corner for seeing your xp and level in real time
+- Track lots of stats like:
+  - Total Characers Typed
+  - How many of each individual character typed
+  - The same but for deletions (coming soon)
+  - Total time spent in project
+  - Other cool stuff (coming soon)
+- autosaving
+- stats stored in a JSON file so you can do things like back-ups and cheating
+  - unix - `~/.local/share/nvim/neostats/neostats.json`
+  - windows - `\AppData\Local\nvim-data\neostats\neostats.json`
 
 ---
 
