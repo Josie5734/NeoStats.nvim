@@ -39,6 +39,9 @@ local NS = {}
 NS.current_project = nil --path of currently open project
 
 local startup_time = 0 --time that project was opened
+local autosave_time = 30 --how many seconds between autosaves
+local autosave = 30 --countdown to autosave
+--decreased each update() until 0
 
 --calculate xp level ups and stuff
 function NS.xp_calc()
@@ -73,6 +76,11 @@ function NS.update()
 	NS.xp_calc() --update stats and stuff
 	if window.mini.exists() then --if window exists
 		window.mini.update() --update
+	end
+	autosave = autosave - 1 --countdown to autosave
+	if autosave == 0 then --if counted down
+		save.save_data(data.data) --save
+		autosave = autosave_time --reset countdown
 	end
 end
 
@@ -220,5 +228,4 @@ end
 return NS
 
 --[[ text testing area
-sd lsdnflksdmfldksfmslkm
 ]]
