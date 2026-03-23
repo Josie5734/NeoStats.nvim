@@ -4,36 +4,29 @@
 plan:
 
 TODO:
-opts implementation in setup to configure stuff
-not actually sure what yet
-
-TODO:
 main window:
 make better design/layout eventually
+thinking having all the single value stats in the rows like they are,
+then have the multivalues like individual chars in tables at the bottom, arranged together on the same lines
+  would need function to format that
+do something with "order" table so that it also stores a better name to be printed rather than the internal variable name,
+  e.g "Characters Typed" instead of total_chars
+  something like "total_chars" = "Characters Typed", so then when iterating through keys in order,
+  send in order[key] to get the value rather than sending the key
 
 TODO:
 look into tracking properly when two separate instances of nvim open 
 
 TODO:
-plans for stats to track:
+plans for stats to add tracking for:
 .
--total characters typed in insert mode
--how many of each individual character
--characters + lines deleted 
--time spent in the project
-
-
-for working out individual chars,
-  in the insert mode character input autocmd, add each char to a list 
-  then either on insert mode exist or on a timer
-    create a copy of that list and clear the original
-    go through copy list and for each char add 1 to the count for that char
-    then delete copy
-          copy is made so that chars can still be added whilst counting is happening
-
-
+-how many of each individual character - (mostly done just need to change how it is displayed)
+-characters + lines deleted (not sure about lines, but all and individual chars can be done, display same way as typed chars)
+-number of files? potential for added/deleted?
+-look into tracking normal mode commands and keyinputs
+-splits and tabs opened/closed? probably an autocmd for those somewhere
 ]]
-local chars = {}
+
 local save = require("neostats.save") --get save functions
 local window = { --get window functions as window.main.function() and window.mini.function()
 	main = require("neostats.window.main"),
@@ -66,7 +59,10 @@ end
 
 --record stats from char input in insert mode
 function NS.add_chars(char)
-	data.project.stats.all_chars[tostring(char)] = (data.project.stats.all_chars[tostring(char)] or 0) + 1 --iterate char typed. create entry if doesnt exist
+	char = tostring(char) --convert to string
+	if char ~= " " then --if input is not a space
+		data.project.stats.all_chars[char] = (data.project.stats.all_chars[char] or 0) + 1 --iterate char typed. create entry if doesnt exist
+	end
 	data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
 	data.project.xp.total = data.project.xp.total + 1 --add xp to total
 	data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
@@ -224,5 +220,4 @@ end
 return NS
 
 --[[ text testing area
-iqwerty
 ]]
