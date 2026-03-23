@@ -23,7 +23,7 @@ M.default_stats = { --default stats used when no project stats are found
 	stats = { --tracked stats
 		total_chars = 0, --chars typed
 		all_chars = {}, --table for every character typed, is built dynamically upon typing a character
-		deleted_chars = 0,
+		total_deleted_chars = 0, --total deleted chars
 		total_time = 0, --time in project
 	},
 }

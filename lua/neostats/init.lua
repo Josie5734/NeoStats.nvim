@@ -25,6 +25,10 @@ plans for stats to add tracking for:
 -number of files? potential for added/deleted?
 -look into tracking normal mode commands and keyinputs
 -splits and tabs opened/closed? probably an autocmd for those somewhere
+
+TODO:
+cool extras:
+  scrabble mode - makes each letter give its worth in scrabble points as xp (might actually be good as the default)
 ]]
 
 local save = require("neostats.save") --get save functions
@@ -222,10 +226,11 @@ function NS.create_autocmds()
 end
 --temporary test function for when needed
 function NS.test()
-	print(vim.inspect(data.project.stats.all_chars))
+	print(data.project.stats.total_deleted_chars)
 end
 
 return NS
 
 --[[ text testing area
+--
 ]]

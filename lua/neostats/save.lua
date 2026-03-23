@@ -50,7 +50,7 @@ end
 --check that the project stats have all the stat fields from default_stats
 function M.check_project_stats(project, default)
 	for k, v in pairs(default.stats) do --for each stat in default
-		if not project.stats[k] == nil then --if that stat doesnt exist in data
+		if project.stats[k] == nil then --if that stat doesnt exist in data
 			project.stats[k] = vim.deepcopy(v) --create it with default value
 		end
 	end

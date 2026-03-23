@@ -72,6 +72,8 @@ Commands:
   - unix - `~/.local/share/nvim/neostats/neostats.json`
   - windows - `\AppData\Local\nvim-data\neostats\neostats.json`
 
+- Note: does not currently support having multiple instances of neovim open in the same project
+
 ---
 
 ### Notes
