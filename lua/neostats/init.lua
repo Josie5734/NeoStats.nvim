@@ -20,11 +20,18 @@ look into tracking properly when two separate instances of nvim open
 TODO:
 plans for stats to add tracking for:
 .
--how many of each individual character - (mostly done just need to change how it is displayed)
+-how many of each individual character - (done top 10, later need option to asctually show ever character in separate screen or something)
 -characters + lines deleted (not sure about lines, but all and individual chars can be done, display same way as typed chars)
 -number of files? potential for added/deleted?
 -look into tracking normal mode commands and keyinputs
 -splits and tabs opened/closed? probably an autocmd for those somewhere
+  -"WinNew" and "WinClosed" for splits
+  -"TabNew" and "TabClosed" for tabs
+-track time per file, display the one with the most time
+  -and also all the times since theyre already there
+-wpm tracker:
+  -average wpm, highest wpm
+  -optionally add current wpm tracker into little window
 
 TODO:
 cool extras:

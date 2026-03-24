@@ -77,22 +77,26 @@ function M.gen_text(width)
 	local lines = {
 		utils.center("Your super cool NeoVim stats", width),
 		"", --blank line
+		utils.center( --total chars added/deleted
+			M.format_stat(
+				"Chars Typed/Deleted",
+				data.project.stats.total_chars .. "/" .. data.project.stats.total_deleted_chars,
+				math.floor(width / 1.5)
+			),
+			width
+		),
+		utils.center( --total time in project
+			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), math.floor(width / 1.5)),
+			width
+		),
 	}
-	for _, stat in ipairs(data.order) do --in order given in order table
-		local value = data.project.stats[stat] --get the value
 
-		if stat == "total_time" then --if time
-			value = utils.time_format(value) --put into hh:mm:ss format
-			table.insert(lines, utils.center(M.format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
-		elseif stat == "all_chars" then --if all chars table
-			local char_lines = M.format_all_chars(value, width) --format all chars into table of lines
-			for i, v in ipairs(char_lines) do --for each line returned from format
-				table.insert(lines, v) --put into lines table
-			end
-		else
-			table.insert(lines, utils.center(M.format_stat(stat, value, math.floor(width / 1.5)), width)) --format and insert into lines
-		end
+	--all chars table
+	local char_lines = M.format_all_chars(data.project.stats.all_chars, width) --format all chars into table of lines
+	for i, v in ipairs(char_lines) do --for each line returned from format
+		table.insert(lines, v) --put into lines table
 	end
+
 	return lines
 end
 
@@ -124,7 +128,10 @@ end
 function M.format_stat(stat, value, width)
 	local str = string.format("%-" .. (width - #tostring(value)) .. "s%s", stat .. ":", value) --get the formatted string
 	--works by taking a width for the whole string and putting stat and value on opposite ends of it
-	return str:gsub(" ", ".") --then return the string with the spaces replaced with dots
+	local before, after = str:match("^(.-:)(.*)$") --split the output into before and after the ":"
+	--done to keep names like "total chars" intact when doing the gsub next
+	after = after:gsub(" ", ".") --replace the big empty space with dots
+	return before .. after --then return the full string with the spaces replaced with dots
 end
 
 return M
