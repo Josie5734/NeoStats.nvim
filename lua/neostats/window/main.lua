@@ -74,6 +74,7 @@ end
 
 --generate text for main window. width is the width of the text
 function M.gen_text(width)
+	local column_width = math.floor(width / 1.5)
 	local lines = {
 		utils.center("Your super cool NeoVim stats", width),
 		"", --blank line
@@ -81,12 +82,16 @@ function M.gen_text(width)
 			M.format_stat(
 				"Chars Typed/Deleted",
 				data.project.stats.total_chars .. "/" .. data.project.stats.total_deleted_chars,
-				math.floor(width / 1.5)
+				column_width
 			),
 			width
 		),
+		utils.center( --percentage of insert chars that were deleted
+			M.format_stat("Deletion Rate", data.project.stats.deletion_rate .. "%", column_width),
+			width
+		),
 		utils.center( --total time in project
-			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), math.floor(width / 1.5)),
+			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), column_width),
 			width
 		),
 	}

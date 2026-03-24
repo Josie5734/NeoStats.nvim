@@ -82,6 +82,35 @@ function NS.add_chars(char)
 	data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
 end
 
+--deleted chars
+local buf_sizes = {} --store sizes for buffers
+local attached = {} --store attached buffers
+function NS.track_deleted_chars(buf)
+	if attached[buf] then --quit if already attached to buffer
+		return
+	end
+	attached[buf] = true --else mark that attached to buffer
+
+	--get the size of the buffer before the change
+	buf_sizes[buf] = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+
+	vim.api.nvim_buf_attach(buf, false, { --attach to buffer after change
+		on_lines = function(_, buf, _, _, _, _, _)
+			local new_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+			local old_size = buf_sizes[buf] or new_size --get the new size
+
+			local diff = old_size - new_size --get difference between new and old size
+
+			if diff > 0 then --if there was less in old size, add how many less to stats
+				data.project.stats.total_deleted_chars = (data.project.stats.total_deleted_chars or 0) + diff
+			end
+
+			--update stored size
+			buf_sizes[buf] = new_size
+		end,
+	})
+end
+
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
@@ -93,6 +122,8 @@ function NS.update()
 		save.save_data(data.data) --save
 		autosave = autosave_time --reset countdown
 	end
+	data.project.stats.deletion_rate =
+		string.format("%.2f", ((data.project.stats.total_deleted_chars / data.project.stats.total_chars) * 100) or 0) --percent of characters deleted
 end
 
 --timer for updating
@@ -157,6 +188,8 @@ function NS.setup()
 	--get startuptime
 	startup_time = os.time()
 
+	NS.start_update_timer() --start update timer
+
 	--keymap for toggling the window
 	vim.keymap.set("n", "<leader>ns", function()
 		if window.mini.exists() then --if window exists
@@ -164,7 +197,6 @@ function NS.setup()
 		else --else open window
 			window.mini.open() --pass in xp values for displaying
 			NS.update() --update stuff
-			NS.start_update_timer() --start update timer
 		end
 	end, { desc = "Toggle NeoStats Window", silent = true, nowait = true, noremap = true })
 
@@ -218,8 +250,9 @@ function NS.create_autocmds()
 	vim.api.nvim_create_autocmd({ "DirChanged", "BufEnter" }, {
 		group = augroup,
 		pattern = "*",
-		callback = function()
+		callback = function(args)
 			NS.check_project()
+			NS.track_deleted_chars(args.buf)
 		end,
 	})
 
@@ -231,6 +264,7 @@ function NS.create_autocmds()
 		end,
 	})
 end
+
 --temporary test function for when needed
 function NS.test()
 	print(data.project.stats.total_deleted_chars)
@@ -239,5 +273,4 @@ end
 return NS
 
 --[[ text testing area
---
 ]]

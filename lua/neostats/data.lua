@@ -1,5 +1,8 @@
 --module for holding data tables to make them shareable easily
 
+--TODO:
+--change stat names to better things
+
 local M = {}
 
 M.data = { --track stats per project
@@ -25,6 +28,7 @@ M.default_stats = { --default stats used when no project stats are found
 		all_chars = {}, --table for every character typed, is built dynamically upon typing a character
 		total_deleted_chars = 0, --total deleted chars
 		total_time = 0, --time in project
+		deletion_rate = 0, --percentage of chars deleted out of inserted
 	},
 }
 
