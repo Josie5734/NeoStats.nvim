@@ -1,8 +1,5 @@
 --module for holding data tables to make them shareable easily
 
---TODO:
---change stat names to better things
-
 local M = {}
 
 M.data = { --track stats per project

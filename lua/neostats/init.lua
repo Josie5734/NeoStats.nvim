@@ -119,7 +119,7 @@ function NS.update()
 	end
 	autosave = autosave - 1 --countdown to autosave
 	if autosave == 0 then --if counted down
-		save.save_data(data.data) --save
+		save.save_data() --save
 		autosave = autosave_time --reset countdown
 	end
 	data.project.stats.deleted_percentage = string.format(
@@ -159,7 +159,7 @@ end
 function NS.switch()
 	NS.session_time() --save time for current project
 	NS.xp_calc() --final xp calcs
-	save.save_data(data.data) --save current project data
+	save.save_data() --save current project data
 	startup_time = os.time() --reset startup time
 	NS.current_project = save.get_project_root() --get new current_project root
 	data.data = save.load_data() --load new data
@@ -177,7 +177,7 @@ function NS.exit()
 	end
 	NS.session_time() --calculate session time and add to stats
 	NS.xp_calc() --do any last xp calculations
-	save.save_data(data.data) --save the current data
+	save.save_data() --save the current data
 end
 
 --setup stuff

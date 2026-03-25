@@ -1,6 +1,7 @@
 --saving and loading data from savefiles
---
---
+
+local data = require("neostats.data") --get data
+
 local M = {} --module
 
 local dir = vim.fn.stdpath("data") .. "/neostats" --folder for neostats data in nvims data folder
@@ -37,24 +38,24 @@ function M.get_project_root()
 end
 
 --return the stats for the current project (cwd) or set them to default if its a new project
-function M.get_project_stats(data, default)
+function M.get_project_stats(data_t)
 	local project = M.get_project_root() --get project root to use as project key
 
-	if not data[project] then --if no stats for the cwd
-		data[project] = vim.deepcopy(default) --set to default (make copy of default rather than pointing to it)
+	if not data_t[project] then --if no stats for the cwd
+		data_t[project] = vim.deepcopy(data.default_stats) --set to default (make copy of default rather than pointing to it)
 	end
-	data[project] = M.check_project_stats(data[project], default)
-	return data[project] --return current project stats
+	data_t[project] = M.check_project_stats(data_t[project])
+	return data_t[project] --return current project stats
 end
 
 --check that the project stats have all the stat fields from default_stats
-function M.check_project_stats(project, default)
-	for k, v in pairs(default.stats) do --for each stat in default
-		if project.stats[k] == nil then --if that stat doesnt exist in data
+function M.check_project_stats(project)
+	for k, v in pairs(data.default_stats.stats) do --for each stat in default
+		if project.stats[k] == nil then --if that stat doesnt exist in data_t
 			project.stats[k] = vim.deepcopy(v) --create it with default value
 		end
 	end
-	for k, v in pairs(default.xp) do --same thing for xp, shouldnt really be necessary but just incase
+	for k, v in pairs(data.default_stats.xp) do --same thing for xp, shouldnt really be necessary but just incase
 		if project.xp[k] == nil then
 			project.xp[k] = vim.deepcopy(v)
 		end
@@ -62,8 +63,8 @@ function M.check_project_stats(project, default)
 	return project
 end
 
---save to a JSON file in nvim data dir
-function M.save_data(data)
+--save to a JSON file in nvim data_t dir
+function M.save_data()
 	vim.fn.mkdir(dir, "p") --make the save directory if it doesnt exist
 
 	local savefile = io.open(file, "w") --open savefile in write mode
@@ -71,11 +72,11 @@ function M.save_data(data)
 		return --exit if file couldnt be opened
 	end
 
-	savefile:write(vim.fn.json_encode(data)) --write the data table into the file
+	savefile:write(vim.fn.json_encode(data.data)) --write the data_t table into the file
 	savefile:close() --close file
 end
 
---load data from the JSON file
+--load data_t from the JSON file
 function M.load_data()
 	local savefile = io.open(file, "r") --open savefile in read mode
 	if not savefile then
@@ -86,15 +87,13 @@ function M.load_data()
 	savefile:close() --close file
 
 	if content and content ~= "" then --if the content exists and isnt empty
-		return vim.fn.json_decode(content) --put content into data table and return
+		return vim.fn.json_decode(content) --put content into data_t table and return
 	end
 end
 
---reset the data for the current project in the data table
-function M.reset_data(data)
-	local project = M.get_project_root() --get project root to use as project key
-	data[project] = nil --reset the data at that project
-	return data --return table with project removed
+--reset the data_t for the current project in the data_t table
+function M.reset_data()
+	data.project = nil --reset the data_t at that project
 end
 
 return M
