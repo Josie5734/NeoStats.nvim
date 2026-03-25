@@ -24,11 +24,11 @@ M.default_stats = { --default stats used when no project stats are found
 		inc = 2.05, --how much to multiply by for the next target
 	},
 	stats = { --tracked stats
-		total_chars = 0, --chars typed
-		all_chars = {}, --table for every character typed, is built dynamically upon typing a character
+		total_typed_chars = 0, --chars typed
+		all_typed_chars = {}, --table for every character typed, is built dynamically upon typing a character
 		total_deleted_chars = 0, --total deleted chars
 		total_time = 0, --time in project
-		deletion_rate = 0, --percentage of chars deleted out of inserted
+		deleted_percentage = 0, --percentage of chars deleted out of inserted
 	},
 }
 

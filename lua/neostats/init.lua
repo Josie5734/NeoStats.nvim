@@ -75,9 +75,9 @@ end
 function NS.add_chars(char)
 	char = tostring(char) --convert to string
 	if char ~= " " then --if input is not a space
-		data.project.stats.all_chars[char] = (data.project.stats.all_chars[char] or 0) + 1 --iterate char typed. create entry if doesnt exist
+		data.project.stats.all_typed_chars[char] = (data.project.stats.all_typed_chars[char] or 0) + 1 --iterate char typed. create entry if doesnt exist
 	end
-	data.project.stats.total_chars = data.project.stats.total_chars + 1 --iterate total char count
+	data.project.stats.total_typed_chars = data.project.stats.total_typed_chars + 1 --iterate total char count
 	data.project.xp.total = data.project.xp.total + 1 --add xp to total
 	data.project.xp.level_xp = data.project.xp.level_xp + 1 --add xp to current level
 end
@@ -122,8 +122,10 @@ function NS.update()
 		save.save_data(data.data) --save
 		autosave = autosave_time --reset countdown
 	end
-	data.project.stats.deletion_rate =
-		string.format("%.2f", ((data.project.stats.total_deleted_chars / data.project.stats.total_chars) * 100) or 0) --percent of characters deleted
+	data.project.stats.deleted_percentage = string.format(
+		"%.2f",
+		((data.project.stats.total_deleted_chars / data.project.stats.total_typed_chars) * 100) or 0
+	) --percent of characters deleted
 end
 
 --timer for updating

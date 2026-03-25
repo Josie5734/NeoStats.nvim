@@ -81,13 +81,13 @@ function M.gen_text(width)
 		utils.center( --total chars added/deleted
 			M.format_stat(
 				"Chars Typed/Deleted",
-				data.project.stats.total_chars .. "/" .. data.project.stats.total_deleted_chars,
+				data.project.stats.total_typed_chars .. "/" .. data.project.stats.total_deleted_chars,
 				column_width
 			),
 			width
 		),
 		utils.center( --percentage of insert chars that were deleted
-			M.format_stat("Deletion Rate", data.project.stats.deletion_rate .. "%", column_width),
+			M.format_stat("Typed Chars Deleted", data.project.stats.deleted_percentage .. "%", column_width),
 			width
 		),
 		utils.center( --total time in project
@@ -97,7 +97,7 @@ function M.gen_text(width)
 	}
 
 	--all chars table
-	local char_lines = M.format_all_chars(data.project.stats.all_chars, width) --format all chars into table of lines
+	local char_lines = M.format_all_chars(data.project.stats.all_typed_chars, width) --format all chars into table of lines
 	for i, v in ipairs(char_lines) do --for each line returned from format
 		table.insert(lines, v) --put into lines table
 	end
