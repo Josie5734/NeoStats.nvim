@@ -4,17 +4,6 @@
 plan:
 
 TODO:
-main window:
-make better design/layout eventually
-thinking having all the single value stats in the rows like they are,
-then have the multivalues like individual chars in tables at the bottom, arranged together on the same lines
-  would need function to format that
-do something with "order" table so that it also stores a better name to be printed rather than the internal variable name,
-  e.g "Characters Typed" instead of total_chars
-  something like "total_chars" = "Characters Typed", so then when iterating through keys in order,
-  send in order[key] to get the value rather than sending the key
-
-TODO:
 look into tracking properly when two separate instances of nvim open 
 
 TODO:
@@ -163,7 +152,7 @@ function NS.switch()
 	startup_time = os.time() --reset startup time
 	NS.current_project = save.get_project_root() --get new current_project root
 	data.data = save.load_data() --load new data
-	data.project = save.get_project_stats(data.data, data.default_stats) --get new project stats
+	data.project = save.get_project_stats() --get new project stats
 	if window.mini.exists() then
 		window.mini.update() --update window if it exists
 	end
@@ -184,7 +173,7 @@ end
 function NS.setup()
 	NS.current_project = save.get_project_root() --get path of current project
 	data.data = save.load_data() --load the saved data
-	data.project = save.get_project_stats(data.data, data.default_stats) --get the specific local project data
+	data.project = save.get_project_stats() --get the specific local project data
 	--sets defaults if not
 
 	--get startuptime
@@ -209,7 +198,11 @@ function NS.setup()
 				window.main.open() --open the big window to display all stats
 			end,
 			reset = function() --reset
-				save.reset_data(data.data) --call reset function
+				save.reset_data() --call reset function
+				data.project = save.get_project_stats() --load in new project data
+				if window.mini.exists() then --if mini window open
+					window.mini.update() --update window
+				end
 				print("NeoStats for current project have been reset") --output
 			end,
 			test = function() --call test function for any testing

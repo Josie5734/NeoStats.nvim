@@ -38,18 +38,20 @@ function M.get_project_root()
 end
 
 --return the stats for the current project (cwd) or set them to default if its a new project
-function M.get_project_stats(data_t)
+function M.get_project_stats()
 	local project = M.get_project_root() --get project root to use as project key
 
-	if not data_t[project] then --if no stats for the cwd
-		data_t[project] = vim.deepcopy(data.default_stats) --set to default (make copy of default rather than pointing to it)
+	if not data.data[project] then --if no stats for the cwd
+		data.data[project] = vim.deepcopy(data.default_stats) --set to default (make copy of default rather than pointing to it)
 	end
-	data_t[project] = M.check_project_stats(data_t[project])
-	return data_t[project] --return current project stats
+	data.data[project] = M.check_project_stats()
+	return data.data[project] --return current project stats
 end
 
 --check that the project stats have all the stat fields from default_stats
-function M.check_project_stats(project)
+function M.check_project_stats()
+	local project_root = M.get_project_root() --get project root to use as project key
+	local project = data.data[project_root] --get current project
 	for k, v in pairs(data.default_stats.stats) do --for each stat in default
 		if project.stats[k] == nil then --if that stat doesnt exist in data_t
 			project.stats[k] = vim.deepcopy(v) --create it with default value
@@ -93,7 +95,8 @@ end
 
 --reset the data_t for the current project in the data_t table
 function M.reset_data()
-	data.project = nil --reset the data_t at that project
+	local project = M.get_project_root() --get project root to use as project key
+	data.data[project] = nil --reset the actual data table
 end
 
 return M

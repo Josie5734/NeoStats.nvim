@@ -98,7 +98,7 @@ function M.gen_text(width)
 
 	--all chars table
 	local char_lines = M.format_all_chars(data.project.stats.all_typed_chars, width) --format all chars into table of lines
-	for i, v in ipairs(char_lines) do --for each line returned from format
+	for _, v in ipairs(char_lines) do --for each line returned from format
 		table.insert(lines, v) --put into lines table
 	end
 
