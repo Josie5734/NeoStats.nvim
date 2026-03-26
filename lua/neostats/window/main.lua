@@ -94,6 +94,22 @@ function M.gen_text(width)
 			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), column_width),
 			width
 		),
+		utils.center( --splits
+			M.format_stat(
+				"Splits Opened/Closed",
+				data.project.stats.splits_opened .. "/" .. data.project.stats.splits_closed,
+				column_width
+			),
+			width
+		),
+		utils.center( --tabs
+			M.format_stat(
+				"Tabs Opened/Closed",
+				data.project.stats.tabs_opened .. "/" .. data.project.stats.tabs_closed,
+				column_width
+			),
+			width
+		),
 	}
 
 	--all chars table

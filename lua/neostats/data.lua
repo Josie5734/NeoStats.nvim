@@ -26,6 +26,10 @@ M.default_stats = { --default stats used when no project stats are found
 		total_deleted_chars = 0, --total deleted chars
 		total_time = 0, --time in project
 		deleted_percentage = 0, --percentage of chars deleted out of inserted
+		splits_opened = 0,
+		splits_closed = 0,
+		tabs_opened = 0,
+		tabs_closed = 0,
 	},
 }
 

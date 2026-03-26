@@ -136,6 +136,15 @@ function NS.start_update_timer()
 	)
 end
 
+--return true if the inputted window is valid for counting splits
+local function is_valid_window(win)
+	local config = vim.api.nvim_win_get_config(win) --get config of windows
+	if config.relative ~= "" then --if floating
+		return true --return true
+	end
+	return false
+end
+
 --check if the project needs to be switched
 function NS.check_project()
 	local new_path = save.get_project_root() --get new root
@@ -241,6 +250,51 @@ function NS.create_autocmds()
 		end,
 	})
 
+	--split tracking
+	vim.api.nvim_create_autocmd("WinNew", { --add split open count
+		group = augroup,
+		pattern = "*",
+		callback = function()
+			local win = vim.api.nvim_get_current_win() --get window
+			if not is_valid_window(win) then --if not a floating window
+				data.project.stats.splits_opened = data.project.stats.splits_opened + 1 --iterate count
+			end --this ignores the NeoStats window and any other plugin floating windows
+		end,
+	})
+	vim.api.nvim_create_autocmd("WinClosed", { --add split close count
+		group = augroup,
+		pattern = "*",
+		callback = function(args)
+			local win = vim.api.nvim_get_current_win() --get window
+
+			local other = tonumber(args.match) --detects the mini window specifically with config.relative ~= ""
+			local _, config = pcall(vim.api.nvim_win_get_config, other)
+			if config.relative ~= "" then
+				return
+			end
+
+			if not is_valid_window(win) then --else if not a valid window
+				data.project.stats.splits_closed = data.project.stats.splits_closed + 1 --iterate count
+			end
+		end,
+	})
+
+	--tab tracking
+	vim.api.nvim_create_autocmd("TabNew", { --add tab open count
+		group = augroup,
+		pattern = "*",
+		callback = function()
+			data.project.stats.tabs_opened = data.project.stats.tabs_opened + 1
+		end,
+	})
+	vim.api.nvim_create_autocmd("TabClosed", { --add tab close count
+		group = augroup,
+		pattern = "*",
+		callback = function()
+			data.project.stats.tabs_closed = data.project.stats.tabs_closed + 1
+		end,
+	})
+
 	--on buf enter or directory change, check if need to load project again
 	vim.api.nvim_create_autocmd({ "DirChanged", "BufEnter" }, {
 		group = augroup,
@@ -262,7 +316,7 @@ end
 
 --temporary test function for when needed
 function NS.test()
-	print(data.project.stats.total_deleted_chars)
+	print(window.main.window.buf)
 end
 
 return NS
