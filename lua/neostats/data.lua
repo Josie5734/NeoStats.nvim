@@ -33,4 +33,7 @@ M.default_stats = { --default stats used when no project stats are found
 	},
 }
 
+M.session_time = 0 --session time
+--not in table since its reset each session, but still needs to be accessed by mainwindow
+
 return M

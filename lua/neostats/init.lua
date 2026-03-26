@@ -10,12 +10,8 @@ TODO:
 plans for stats to add tracking for:
 .
 -how many of each individual character - (done top 10, later need option to asctually show ever character in separate screen or something)
--characters + lines deleted (not sure about lines, but all and individual chars can be done, display same way as typed chars)
 -number of files? potential for added/deleted?
 -look into tracking normal mode commands and keyinputs
--splits and tabs opened/closed? probably an autocmd for those somewhere
-  -"WinNew" and "WinClosed" for splits
-  -"TabNew" and "TabClosed" for tabs
 -track time per file, display the one with the most time
   -and also all the times since theyre already there
 -wpm tracker:
@@ -25,6 +21,7 @@ plans for stats to add tracking for:
 TODO:
 cool extras:
   scrabble mode - makes each letter give its worth in scrabble points as xp (might actually be good as the default)
+  xp multipliers - not sure how these would be gotten, maybe wpm or something
 ]]
 
 local save = require("neostats.save") --get save functions
@@ -38,7 +35,7 @@ local NS = {}
 
 NS.current_project = nil --path of currently open project
 
-local startup_time = 0 --time that project was opened
+local total_time_update = 0 --time since the last update to total_time
 local autosave_time = 30 --how many seconds between autosaves
 local autosave = 30 --countdown to autosave
 --decreased each update() until 0
@@ -55,9 +52,14 @@ function NS.xp_calc()
 end
 
 --calculate time spent in session
-function NS.session_time()
-	local sessiontime = os.time() - startup_time --time on call - time at startup
-	data.project.stats.total_time = data.project.stats.total_time + sessiontime
+function NS.track_time()
+	local current_time = vim.loop.hrtime() --get current time
+	local delta_time = (current_time - total_time_update) / 1e9 --get time since last update
+
+	data.project.stats.total_time = data.project.stats.total_time + delta_time --add time to total
+	data.session_time = data.session_time + delta_time --add time for session
+
+	total_time_update = current_time --set when last update was
 end
 
 --record stats from char input in insert mode
@@ -103,18 +105,22 @@ end
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
-	if window.mini.exists() then --if window exists
+	NS.track_time() --update time
+	data.project.stats.deleted_percentage = string.format(
+		"%.2f",
+		((data.project.stats.total_deleted_chars / data.project.stats.total_typed_chars) * 100) or 0
+	) --percent of characters deleted
+	if window.mini.exists() then --if mini window exists
 		window.mini.update() --update
+	end
+	if window.main.exists() then --if main window exists
+		window.main.update() --update
 	end
 	autosave = autosave - 1 --countdown to autosave
 	if autosave == 0 then --if counted down
 		save.save_data() --save
 		autosave = autosave_time --reset countdown
 	end
-	data.project.stats.deleted_percentage = string.format(
-		"%.2f",
-		((data.project.stats.total_deleted_chars / data.project.stats.total_typed_chars) * 100) or 0
-	) --percent of characters deleted
 end
 
 --timer for updating
@@ -155,10 +161,9 @@ end
 
 --switch project
 function NS.switch()
-	NS.session_time() --save time for current project
+	--NS.session_time() --save time for current project
 	NS.xp_calc() --final xp calcs
 	save.save_data() --save current project data
-	startup_time = os.time() --reset startup time
 	NS.current_project = save.get_project_root() --get new current_project root
 	data.data = save.load_data() --load new data
 	data.project = save.get_project_stats() --get new project stats
@@ -169,12 +174,15 @@ end
 
 --exiting cleanly
 function NS.exit()
-	window.mini.close() --close window
+	window.mini.close() --close mini window
+	window.main.close() --close main window
 	if NS._update_timer then --if timer exists
 		NS._update_timer:stop() --stop update timer
 	end
-	NS.session_time() --calculate session time and add to stats
+	--NS.session_time() --calculate session time and add to stats
 	NS.xp_calc() --do any last xp calculations
+	NS.track_time() --time calculations
+	data.session_time = 0 --reset session time
 	save.save_data() --save the current data
 end
 
@@ -185,8 +193,9 @@ function NS.setup()
 	data.project = save.get_project_stats() --get the specific local project data
 	--sets defaults if not
 
-	--get startuptime
-	startup_time = os.time()
+	--get total_time_update and set session_time
+	data.session_time = 0 --set session time to 0 (should be already but just incase)
+	total_time_update = vim.loop.hrtime()
 
 	NS.start_update_timer() --start update timer
 

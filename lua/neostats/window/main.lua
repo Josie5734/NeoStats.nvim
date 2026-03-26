@@ -61,6 +61,13 @@ function M.close()
 	end
 end
 
+--update text (currently unused but here incase)
+function M.update()
+	vim.bo[M.window.buf].modifiable = true --make temporarily modifiable
+	vim.api.nvim_buf_set_lines(M.window.buf, 0, -1, false, M.gen_text(M.window.width())) --set text
+	vim.bo[M.window.buf].modifiable = false --make not modifiable again
+end
+
 --check if main window exists
 function M.exists()
 	if M.window.win and M.window.buf then --if exists
@@ -92,6 +99,10 @@ function M.gen_text(width)
 		),
 		utils.center( --total time in project
 			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), column_width),
+			width
+		),
+		utils.center( --total time in project
+			M.format_stat("Session Time", utils.time_format(data.session_time), column_width),
 			width
 		),
 		utils.center( --splits
