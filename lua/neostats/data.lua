@@ -30,6 +30,7 @@ M.default_stats = { --default stats used when no project stats are found
 		splits_closed = 0,
 		tabs_opened = 0,
 		tabs_closed = 0,
+		project_files = 0, --number of files in project
 	},
 }
 

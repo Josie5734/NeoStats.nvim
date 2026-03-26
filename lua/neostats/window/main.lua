@@ -121,6 +121,10 @@ function M.gen_text(width)
 			),
 			width
 		),
+		utils.center( --file count
+			M.format_stat("Project Files", data.project.stats.project_files, column_width),
+			width
+		),
 	}
 
 	--all chars table

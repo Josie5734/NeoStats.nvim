@@ -102,6 +102,34 @@ function NS.track_deleted_chars(buf)
 	})
 end
 
+--recursive function to look through project and count number of files
+function NS.count_files(path)
+	path = path or NS.current_project --path set to current project by default
+	local count = 0 --current count of files
+
+	local ignore = { --files/folders to ignore
+		[".git"] = true,
+		["node_modules"] = true,
+		[".cache"] = true,
+		["dist"] = true,
+		["build"] = true,
+	}
+
+	for name, type in vim.fs.dir(path) do --for each item in the project
+		local full = path .. "/" .. name --get full path
+		if ignore[name] or type == "link" then --if name of item is in the ignore, table. ignore symlinks
+			goto continue --skip this iteration
+		end
+		if type == "file" then --if the item is a file
+			count = count + 1 --count it
+		elseif type == "directory" then --if the item is a directory
+			count = count + NS.count_files(full) --count from within that directory and add to current count
+		end
+		::continue:: --used to skip loop
+	end
+	return count --send count back
+end
+
 --update stats and other numbery stuff
 function NS.update()
 	NS.xp_calc() --update stats and stuff
@@ -213,6 +241,7 @@ function NS.setup()
 	vim.api.nvim_create_user_command("NeoStats", function(opts)
 		local commands = { --table of commands
 			default = function() --the default noargs function
+				data.project.stats.project_files = NS.count_files() --get current file count
 				window.main.open() --open the big window to display all stats
 			end,
 			reset = function() --reset
@@ -325,7 +354,7 @@ end
 
 --temporary test function for when needed
 function NS.test()
-	print(window.main.window.buf)
+	print(NS.count_files())
 end
 
 return NS
