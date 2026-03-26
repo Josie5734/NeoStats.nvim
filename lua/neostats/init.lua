@@ -7,10 +7,27 @@ TODO:
 look into tracking properly when two separate instances of nvim open 
 
 TODO:
+move some of the functions in init.lua into their own files
+e.g all the stat functions into a stat file
+
+TODO:
+redo format for all_chars_typed table so that it can display every character
+in the table
+make it do multiple columns
+needs some way to decide how many rows to have, and the how to space the rows on the lines
+
+TODO:
+setup opts table
+-paste override
+
+TODO:
 plans for stats to add tracking for:
 .
--how many of each individual character - (done top 10, later need option to asctually show ever character in separate screen or something)
--number of files? potential for added/deleted?
+-track pasted and yanked characters
+  -yanks - track with "TextYankPost" autocmd
+    -can get the text somehow will have to double check docs
+  -pastes - will have to override the "p" and "P" commands to count the register characters
+    -ideally will have setup opts first to make this disableable incase of any custom mappings
 -look into tracking normal mode commands and keyinputs
 -track time per file, display the one with the most time
   -and also all the times since theyre already there
@@ -360,4 +377,5 @@ end
 return NS
 
 --[[ text testing area
+--123123
 ]]

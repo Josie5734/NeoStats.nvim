@@ -85,6 +85,7 @@ function M.gen_text(width)
 	local lines = {
 		utils.center("Your super cool NeoVim stats", width),
 		"", --blank line
+		utils.center("Characters & Typing", width),
 		utils.center( --total chars added/deleted
 			M.format_stat(
 				"Chars Typed/Deleted",
@@ -97,12 +98,20 @@ function M.gen_text(width)
 			M.format_stat("Typed Chars Deleted", data.project.stats.deleted_percentage .. "%", column_width),
 			width
 		),
+		"",
+		utils.center("Time", width),
 		utils.center( --total time in project
 			M.format_stat("Total Time", utils.time_format(data.project.stats.total_time), column_width),
 			width
 		),
 		utils.center( --total time in project
 			M.format_stat("Session Time", utils.time_format(data.session_time), column_width),
+			width
+		),
+		"",
+		utils.center("Files and Windows", width),
+		utils.center( --file count
+			M.format_stat("Project Files", data.project.stats.project_files, column_width),
 			width
 		),
 		utils.center( --splits
@@ -119,10 +128,6 @@ function M.gen_text(width)
 				data.project.stats.tabs_opened .. "/" .. data.project.stats.tabs_closed,
 				column_width
 			),
-			width
-		),
-		utils.center( --file count
-			M.format_stat("Project Files", data.project.stats.project_files, column_width),
 			width
 		),
 	}
