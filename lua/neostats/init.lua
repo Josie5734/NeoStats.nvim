@@ -17,8 +17,8 @@ make it do multiple columns
 needs some way to decide how many rows to have, and the how to space the rows on the lines
 
 TODO:
-setup opts table
--paste override
+add to opts table
+-paste override (when paste tracking added)
 
 TODO:
 plans for stats to add tracking for:
@@ -29,8 +29,6 @@ plans for stats to add tracking for:
   -pastes - will have to override the "p" and "P" commands to count the register characters
     -ideally will have setup opts first to make this disableable incase of any custom mappings
 -look into tracking normal mode commands and keyinputs
--track time per file, display the one with the most time
-  -and also all the times since theyre already there
 -wpm tracker:
   -average wpm, highest wpm
   -optionally add current wpm tracker into little window
@@ -52,8 +50,21 @@ local NS = {}
 
 NS.current_project = nil --path of currently open project
 
+NS.config = { --default opts
+	markers = { --things to use as project markers
+		".git",
+		"package.json",
+		"pyproject.toml",
+		"Cargo.toml",
+		"go.mod",
+		"Makefile",
+		"stylua.toml",
+		".nvim.lua",
+	},
+	autosave_interval = 30,
+}
+
 local total_time_update = 0 --time since the last update to total_time
-local autosave_time = 30 --how many seconds between autosaves
 local autosave = 30 --countdown to autosave
 --decreased each update() until 0
 
@@ -164,7 +175,7 @@ function NS.update()
 	autosave = autosave - 1 --countdown to autosave
 	if autosave == 0 then --if counted down
 		save.save_data() --save
-		autosave = autosave_time --reset countdown
+		autosave = NS.config.autosave_interval --reset countdown
 	end
 end
 
@@ -232,7 +243,11 @@ function NS.exit()
 end
 
 --setup stuff
-function NS.setup()
+function NS.setup(opts)
+	opts = opts or {} --passed opts
+	NS.config = vim.tbl_deep_extend("force", NS.config, opts) --merge/override defaults and passed opts
+	save.setup(opts.markers) --setup save config
+
 	NS.current_project = save.get_project_root() --get path of current project
 	data.data = save.load_data() --load the saved data
 	data.project = save.get_project_stats() --get the specific local project data
@@ -241,10 +256,9 @@ function NS.setup()
 	--get total_time_update and set session_time
 	data.session_time = 0 --set session time to 0 (should be already but just incase)
 	total_time_update = vim.loop.hrtime()
-
 	NS.start_update_timer() --start update timer
 
-	--keymap for toggling the window
+	--keymap for toggling the mini window
 	vim.keymap.set("n", "<leader>ns", function()
 		if window.mini.exists() then --if window exists
 			NS.exit() --clean exit

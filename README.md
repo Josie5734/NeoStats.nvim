@@ -6,9 +6,7 @@
 
 This plugin is in development
 
-It is functional but with very minimal features
-
-Currently, there is a functioning (but barebones) XP tracker and level system, which have not been tested for any kind of balancing
+It is functional but does not have all planned features implemented
 
 ---
 
@@ -22,9 +20,20 @@ NeoStats tracks things like:
 
 - number of each individual character written
 
-- many more things that i have not thought of and/or got round to making yet 👍
+- time spent in a project
 
-Stats will be tracked per project and potentially globally depending on how things turn out, with as much customisability as possible
+- words per minute
+
+- potentially more things : )
+
+Neostats autosaves every 30 seconds, or however many seconds you choose in the setup
+
+The save file can be found at:
+
+- linux: `~/.local/share/nvim/neostats/neostats.json`
+- windows: `\AppData\Local\nvim-data\neostats\neostats.json`
+
+Stats are tracked per project, using markers like .git to distinguish where projects are
 
 ---
 
@@ -36,7 +45,20 @@ Stats will be tracked per project and potentially globally depending on how thin
 return {
     "Josie5734/NeoStats.nvim"
     config = function()
-        require("neostats").setup()
+        require("neostats").setup({
+            --default opts, don't need to be included unless changing them
+            markers = { --things to use as project markers
+                ".git",
+                "package.json",
+                "pyproject.toml",
+                "Cargo.toml",
+                "go.mod",
+                "Makefile",
+                "stylua.toml",
+                ".nvim.lua",
+            },
+            autosave_interval = 30, --how often (in seconds) to save data to disk
+        })
     end,
 }
 ```
@@ -54,25 +76,6 @@ Commands:
 
 - `:NeoStats` - opens the main stats window
 - `:NeoStats reset` - resets the stats for the current project
-
----
-
-### Features:
-
-- cool XP and level system :0
-- little window in the corner for seeing your xp and level in real time
-- Track lots of stats like:
-  - Total Characers Typed
-  - How many of each individual character typed
-  - The same but for deletions (coming soon)
-  - Total time spent in project
-  - Other cool stuff (coming soon)
-- autosaving
-- stats stored in a JSON file so you can do things like back-ups and cheating
-  - unix - `~/.local/share/nvim/neostats/neostats.json`
-  - windows - `\AppData\Local\nvim-data\neostats\neostats.json`
-
-- Note: does not currently support having multiple instances of neovim open in the same project
 
 ---
 

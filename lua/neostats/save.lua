@@ -7,24 +7,19 @@ local M = {} --module
 local dir = vim.fn.stdpath("data") .. "/neostats" --folder for neostats data in nvims data folder
 local file = dir .. "/neostats.json" --json file to save data into
 
+M.markers = {} --markers to use for project markers
+
+function M.setup(markers) --get the markers from opts
+	M.markers = markers
+end
+
 --figure out the root of project based off certain markers like git
 function M.get_project_root()
 	local cur_file = vim.api.nvim_buf_get_name(0) --current file open
 	local start = cur_file ~= "" and vim.fs.dirname(cur_file) or vim.fn.getcwd()
 	--if current buffer has file, start = containing folder, else start = cwd
 
-	local markers = { --things to use as project markers
-		".git",
-		"package.json",
-		"pyproject.toml",
-		"Cargo.toml",
-		"go.mod",
-		"Makefile",
-		"stylua.toml",
-		".nvim.lua",
-	}
-
-	local found = vim.fs.find(markers, { --search upwards through directories to find markers
+	local found = vim.fs.find(M.markers, { --search upwards through directories to find markers
 		path = start, --start in current/containing folder
 		upward = true, --go upwards
 		limit = 1, --maximum number of matches (1 to stop at first one)
