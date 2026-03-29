@@ -61,6 +61,13 @@ NS.config = { --default opts
 		"stylua.toml",
 		".nvim.lua",
 	},
+	ignore = { --files/folders to ignore in counting
+		[".git"] = true,
+		["node_modules"] = true,
+		[".cache"] = true,
+		["dist"] = true,
+		["build"] = true,
+	},
 	autosave_interval = 30,
 }
 
@@ -135,17 +142,13 @@ function NS.count_files(path)
 	path = path or NS.current_project --path set to current project by default
 	local count = 0 --current count of files
 
-	local ignore = { --files/folders to ignore
-		[".git"] = true,
-		["node_modules"] = true,
-		[".cache"] = true,
-		["dist"] = true,
-		["build"] = true,
-	}
+	if not path then --guard for no path
+		return 0
+	end
 
 	for name, type in vim.fs.dir(path) do --for each item in the project
 		local full = path .. "/" .. name --get full path
-		if ignore[name] or type == "link" then --if name of item is in the ignore, table. ignore symlinks
+		if NS.config.ignore[name] or type == "link" then --if name of item is in the ignore table or a symlink
 			goto continue --skip this iteration
 		end
 		if type == "file" then --if the item is a file
@@ -246,7 +249,7 @@ end
 function NS.setup(opts)
 	opts = opts or {} --passed opts
 	NS.config = vim.tbl_deep_extend("force", NS.config, opts) --merge/override defaults and passed opts
-	save.setup(opts.markers) --setup save config
+	save.setup(NS.config.markers) --setup save config
 
 	NS.current_project = save.get_project_root() --get path of current project
 	data.data = save.load_data() --load the saved data

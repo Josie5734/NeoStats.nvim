@@ -57,6 +57,13 @@ return {
                 "stylua.toml",
                 ".nvim.lua",
             },
+            ignore = { --files/folders to ignore in counting
+                [".git"] = true, --make sure string in [] and are = true
+                ["node_modules"] = true,
+                [".cache"] = true,
+                ["dist"] = true,
+                ["build"] = true,
+            },
             autosave_interval = 30, --how often (in seconds) to save data to disk
         })
     end,
