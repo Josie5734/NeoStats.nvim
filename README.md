@@ -65,6 +65,10 @@ return {
                 ["build"] = true,
             },
             autosave_interval = 30, --how often (in seconds) to save data to disk
+            wpm = { --wpm counter
+                cpw = 5, --characters per word
+                countwin = 10, --seconds to count the wpm over
+            },
         })
     end,
 }

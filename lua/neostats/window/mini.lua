@@ -9,7 +9,7 @@ M.window = { --window opts
 	buf = nil,
 	win = nil,
 	width = 24, --width and height hardcoded for now, maybe change later, probably not
-	height = 5,
+	height = 6,
 	padding = 1,
 }
 
@@ -90,6 +90,7 @@ function M.gen_text(width, padding)
 		M.format_stat("xp", data.project.xp.total .. "/" .. data.project.xp.target, width, padding), --xp
 		utils.center(utils.gen_xpbar(data.project.xp), width), --xp bar
 		M.format_stat("level", data.project.xp.level, width, padding), --level
+		utils.center(M.format_stat("wpm", data.wpm_value, width / 2.5, padding), width),
 	}
 	return lines
 end

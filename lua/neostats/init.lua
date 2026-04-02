@@ -8,9 +8,6 @@ stop from attempting to act on term buffers
 not sure what causes this as it only happens sometimes
 
 TODO:
-look into tracking properly when two separate instances of nvim open 
-
-TODO:
 move some of the functions in init.lua into their own files
 e.g all the stat functions into a stat file
 
@@ -35,7 +32,6 @@ plans for stats to add tracking for:
 -look into tracking normal mode commands and keyinputs
 -wpm tracker:
   -average wpm, highest wpm
-  -optionally add current wpm tracker into little window
 
 TODO:
 cool extras:
@@ -49,6 +45,7 @@ local window = { --get window functions as window.main.function() and window.min
 	mini = require("neostats.window.mini"),
 }
 local data = require("neostats.data") --get data tables
+local wpm = require("neostats.wpm") --wpm module
 
 local NS = {}
 
@@ -73,6 +70,10 @@ NS.config = { --default opts
 		["build"] = true,
 	},
 	autosave_interval = 30,
+	wpm = { --wpm counter
+		cpw = 5, --characters per word
+		countwin = 10, --seconds to count the wpm over
+	},
 }
 
 local total_time_update = 0 --time since the last update to total_time
@@ -173,6 +174,7 @@ function NS.update()
 		"%.2f",
 		((data.project.stats.total_deleted_chars / data.project.stats.total_typed_chars) * 100) or 0
 	) --percent of characters deleted
+	data.wpm_value = wpm.calc_wpm() --calculate wpm
 	if window.mini.exists() then --if mini window exists
 		window.mini.update() --update
 	end
@@ -254,6 +256,7 @@ function NS.setup(opts)
 	opts = opts or {} --passed opts
 	NS.config = vim.tbl_deep_extend("force", NS.config, opts) --merge/override defaults and passed opts
 	save.setup(NS.config.markers) --setup save config
+	wpm.setup(NS.config.wpm.cpw, NS.config.wpm.countwin) --setup wpm
 
 	NS.current_project = save.get_project_root() --get path of current project
 	data.data = save.load_data() --load the saved data
@@ -325,7 +328,8 @@ function NS.create_autocmds()
 		group = augroup,
 		pattern = "*",
 		callback = function()
-			NS.add_chars(vim.v.char)
+			NS.add_chars(vim.v.char) --add chars to stat tracking list
+			wpm.add_chars(vim.v.char) --add char to wpm tracker
 		end,
 	})
 
@@ -402,4 +406,6 @@ return NS
 
 --[[ text testing area
 --123123
+--skdjfhsdkfjhsdfkjhsdfkjhsdfkjhsdfkjhsdfjknsdfjnsjn
+--jklsdnjnsdfkjnsdfkjnsdkjfnsdfkjnsdkjfnsdfkjnsdfkjnsd
 ]]

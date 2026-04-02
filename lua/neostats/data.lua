@@ -34,7 +34,8 @@ M.default_stats = { --default stats used when no project stats are found
 	},
 }
 
+--extras not put in savefile as they are per session
 M.session_time = 0 --session time
---not in table since its reset each session, but still needs to be accessed by mainwindow
+M.wpm_value = 0 --wpm for mini window
 
 return M
