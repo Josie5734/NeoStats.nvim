@@ -82,6 +82,7 @@ Keymaps:
 Commands:
 
 - `:NeoStats` - opens the main stats window
+- `:NeoStats backup` - create a copy of `neostats.json` called `neostats_backup.json`
 - `:NeoStats reset` - resets the stats for the current project
 
 ---

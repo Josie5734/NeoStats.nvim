@@ -34,19 +34,17 @@ end
 
 --return the stats for the current project (cwd) or set them to default if its a new project
 function M.get_project_stats()
-	local project = M.get_project_root() --get project root to use as project key
-
-	if not data.data[project] then --if no stats for the cwd
-		data.data[project] = vim.deepcopy(data.default_stats) --set to default (make copy of default rather than pointing to it)
+	local root = M.get_project_root() --get project root
+	if not data[root] then --if no stats for the cwd
+		data[root] = vim.deepcopy(data.default_stats) --set to default (make copy of default rather than pointing to it)
 	end
-	data.data[project] = M.check_project_stats()
-	return data.data[project] --return current project stats
+	data[root] = M.check_project_stats()
+	return data[root] --return current project stats
 end
 
 --check that the project stats have all the stat fields from default_stats
 function M.check_project_stats()
-	local project_root = M.get_project_root() --get project root to use as project key
-	local project = data.data[project_root] --get current project
+	local project = data[M.get_project_root()] --get current project
 	for k, v in pairs(data.default_stats.stats) do --for each stat in default
 		if project.stats[k] == nil then --if that stat doesnt exist in data_t
 			project.stats[k] = vim.deepcopy(v) --create it with default value
@@ -92,6 +90,18 @@ end
 function M.reset_data()
 	local project = M.get_project_root() --get project root to use as project key
 	data.data[project] = nil --reset the actual data table
+end
+
+--copy neostats.json to neostats_backup.json
+function M.backup_data()
+	local backup = dir .. "/neostats_backup.json"
+	local contents = M.load_data() --read the main json file
+	local backupfile = io.open(backup, "w") --open backup file in write mode
+	if not backupfile then
+		return --exit if backup file couldnt be opened
+	end
+	backupfile:write(vim.fn.json_encode(contents)) --write contents to backup file
+	backupfile:close() --close file
 end
 
 return M

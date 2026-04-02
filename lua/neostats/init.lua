@@ -4,6 +4,10 @@
 plan:
 
 TODO:
+stop from attempting to act on term buffers
+not sure what causes this as it only happens sometimes
+
+TODO:
 look into tracking properly when two separate instances of nvim open 
 
 TODO:
@@ -278,6 +282,9 @@ function NS.setup(opts)
 				data.project.stats.project_files = NS.count_files() --get current file count
 				window.main.open() --open the big window to display all stats
 			end,
+			backup = function() --create backup file
+				save.backup_data()
+			end,
 			reset = function() --reset
 				save.reset_data() --call reset function
 				data.project = save.get_project_stats() --load in new project data
@@ -300,7 +307,7 @@ function NS.setup(opts)
 	end, {
 		nargs = "?", --allow zero or one arguments to be given
 		complete = function() --completion for the arguments
-			return { "reset" }
+			return { "backup", "reset" }
 		end,
 		desc = "NeoStats commands",
 	})
